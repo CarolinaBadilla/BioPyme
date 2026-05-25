@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// MODELOS GEOGRÁFICOS
+// ============================================
+
+model Region {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique
+  color       String     @default("#3b82f6")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  departments Department[]
+
+  @@map("regions")
+}
+
+model Department {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique
+  regionId    Int
+  color       String     @default("#60a5fa")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  region      Region     @relation(fields: [regionId], references: [id])
+  cities      City[]
+
+  @@map("departments")
+}
+
+model City {
+  id           Int        @id @default(autoincrement())
+  name         String     @unique
+  departmentId Int
+  latitude     Float
+  longitude    Float
+  isCapital    Boolean    @default(false)
+  population   Int?       @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  @@map("cities")
+}
+
+// ============================================
+// MODELOS DE USUARIOS Y EMPRESAS
+// ============================================
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      String
+  name      String?
+  companyId Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Company {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  cuit        String  @unique
+  address     String
+  latitude    Float?
+  longitude   Float?
+  type        String  @default("PLANTA")
+  cityId      Int?
+  
+  // Precios y costos
+  biodieselPrice    Float   @default(0)
+  fossilDieselPrice Float   @default(0)
+  variableCost      Float   @default(0)
+  fixedCost         Float   @default(0)
+  
+  // Capacidad
+  nominalCapacityRange String @default("")
+  productionMonth   Int     @default(0)
+  
+  // Stock y demanda
+  stockLiters       Int     @default(0)
+  monthlyDemand     Int     @default(0)
+  dailyCapacity     Int     @default(0)
+  
+  // Cámara Biopyme
+  knowsChamber      Boolean @default(false)
+  isAssociated      Boolean @default(false)
+  wantsToAssociate  Boolean @default(false)
+  
+  // Estado del proyecto
+  projectStatus     String  @default("")
+  
+  // Tecnología
+  equipment         String  @default("")
+  
+  // Habilitaciones
+  hasSecEnergyLicense Boolean @default(false)
+  hasSelloB100       Boolean @default(false)
+  secEnergyProcessStatus String @default("")
+  
+  // Control de calidad
+  qualityControlled   Boolean @default(false)
+  hasAnalysis         Boolean @default(false)
+  satisfactoryResult  Boolean @default(false)
+  labReference        String  @default("")
+  
+  // Tipo de aceite
+  oilType            String  @default("")
+  
+  // Certificaciones
+  qualityCertified  Boolean @default(false)
+  selloB100         Boolean @default(false)
+  
+  // Empleos
+  employees         Int     @default(0)
+  
+  isApproved Boolean @default(false)
+  ownerId     Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("companies")
+}
+
+model Request {
+  id          Int      @id @default(autoincrement())
+  companyId   Int
+  status      String   @default("PENDING")
+  documentUrl String?
+  adminNotes  String?
+  reviewedBy  Int?
+  reviewedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("requests")
+}

@@ -1,0 +1,70 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "nombre": "Córdoba", "departamento": "Capital", "poblacion": 1500000, "tipo": "capital_provincial" },
+      "geometry": { "type": "Point", "coordinates": [-64.1833, -31.4167] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "nombre": "Jesús María", "departamento": "Colón", "poblacion": 35000, "tipo": "ciudad" },
+      "geometry": { "type": "Point", "coordinates": [-64.1, -30.9833] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "nombre": "Río Cuarto", "departamento": "Río Cuarto", "poblacion": 200000, "tipo": "ciudad" },
+      "geometry": { "type": "Point", "coordinates": [-64.35, -33.1333] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "nombre": "San Francisco", "departamento": "San Justo", "poblacion": 60000, "tipo": "ciudad" },
+      "geometry": { "type": "Point", "coordinates": [-62.0833, -31.4333] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "nombre": "Villa María", "departamento": "General San Martín", "poblacion": 100000, "tipo": "ciudad" },
+      "geometry": { "type": "Point", "coordinates": [-63.2333, -32.4167] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "nombre": "Cosquín", "departamento": "Punilla", "poblacion": 25000, "tipo": "ciudad" },
+      "geometry": { "type": "Point", "coordinates": [-64.5, -31.4167] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "nombre": "Cruz del Eje", "departamento": "Cruz del Eje", "poblacion": 35000, "tipo": "ciudad" },
+      "geometry": { "type": "Point", "coordinates": [-64.8, -30.7333] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "nombre": "Bell Ville", "departamento": "Unión", "poblacion": 35000, "tipo": "ciudad" },
+      "geometry": { "type": "Point", "coordinates": [-62.6833, -32.6167] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "nombre": "Marcos Juárez", "departamento": "Marcos Juárez", "poblacion": 28000, "tipo": "ciudad" },
+      "geometry": { "type": "Point", "coordinates": [-62.1, -32.7] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "nombre": "Alta Gracia", "departamento": "Santa María", "poblacion": 50000, "tipo": "ciudad" },
+      "geometry": { "type": "Point", "coordinates": [-64.4333, -31.65] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "nombre": "Deán Funes", "departamento": "Ischilín", "poblacion": 25000, "tipo": "ciudad" },
+      "geometry": { "type": "Point", "coordinates": [-64.35, -30.4333] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "nombre": "Laboulaye", "departamento": "Presidente Roque Sáenz Peña", "poblacion": 20000, "tipo": "ciudad" },
+      "geometry": { "type": "Point", "coordinates": [-63.3833, -34.1167] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "nombre": "Huinca Renancó", "departamento": "General Roca", "poblacion": 12000, "tipo": "ciudad" },
+      "geometry": { "type": "Point", "coordinates": [-64.3833, -34.8333] }
+    }
+  ]
+}
