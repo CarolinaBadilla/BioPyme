@@ -7,12 +7,9 @@ async function bootstrap() {
   
   // ✅ CONFIGURACIÓN CORS CORRECTA
   app.enableCors({
-    origin: [
-      'http://localhost:5173',           // Desarrollo local
-      'https://biopyme.onrender.com/',    // Tu frontend en producción // Si usas otro nombre
-    ],
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    credentials: true,
+    credentials: false,
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
   
