@@ -183,11 +183,34 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
     });
 }, []);
 
+// Mapeo de departamentos a regiones (agrega esto ANTES del useEffect)
+const deptToRegion: Record<string, { name: string; color: string; fillColor: string }> = {
+  "Punilla": { name: "Centro", color: "#3b82f6", fillColor: "#93c5fd" },
+  "Calamuchita": { name: "Centro", color: "#3b82f6", fillColor: "#93c5fd" },
+  "Totoral": { name: "Noroeste", color: "#f59e0b", fillColor: "#fde68a" },
+  "San Alberto": { name: "Noroeste", color: "#f59e0b", fillColor: "#fde68a" },
+  "San Javier": { name: "Oeste", color: "#ef4444", fillColor: "#fca5a5" },
+  "Tercero Arriba": { name: "Este", color: "#06b6d4", fillColor: "#a5f3fc" },
+  "Río Segundo": { name: "Noreste", color: "#10b981", fillColor: "#a7f3d0" },
+};
+
+// Cargar departamentos (REEMPLAZA este useEffect)
 useEffect(() => {
   fetch('/data/geo/cordoba-departments.geojson')
     .then(res => res.json())
     .then(data => {
-      setDepartments(data.features);
+      // Asignar colores según el mapeo
+      const coloredFeatures = data.features.map((feature: any) => {
+        const deptName = feature.properties.nombre;
+        const region = deptToRegion[deptName];
+        if (region) {
+          feature.properties.color = region.color;
+          feature.properties.fillColor = region.fillColor;
+          feature.properties.regionName = region.name;
+        }
+        return feature;
+      });
+      setDepartments(coloredFeatures);
     })
     .catch(err => console.error('Error loading departments:', err));
 }, []);

@@ -13,24 +13,22 @@ try {
     }
   });
   
-  // División CORRECTA de regiones de Córdoba
+  // ✅ NUEVA DIVISIÓN de regiones (con cambios actualizados)
   const regionMapping = {
+    "Región Centro": [
+      "Capital", "Colón", "Santa María", "Punilla", "Calamuchita"
+    ],
     "Región Noroeste": [
-      "Cruz del Eje", "Ischilín", "Pocho", "Minas", "Sobremonte", 
-      "Río Seco", "Tulumba"
+      "Cruz del Eje", "Ischilín", "Sobremonte", "Río Seco", "Tulumba", "Totoral"
     ],
     "Región Noreste": [
-      "San Justo", "Río Primero", "San Javier", "Totoral"
-    ],
-    "Región Centro": [
-      "Capital", "Colón", "Río Segundo", "Santa María", 
-      "Tercero Arriba"
+      "San Justo", "Río Primero", "Río Segundo"
     ],
     "Región Oeste": [
-      "Punilla", "Calamuchita", "San Alberto"
+      "San Alberto", "Pocho", "Minas", "San Javier"
     ],
     "Región Este": [
-      "Unión", "Marcos Juárez", "General San Martín"
+      "Unión", "Marcos Juárez", "General San Martín", "Tercero Arriba"
     ],
     "Región Sur": [
       "Río Cuarto", "Juárez Celman", "Presidente Roque Sáenz Peña", 
