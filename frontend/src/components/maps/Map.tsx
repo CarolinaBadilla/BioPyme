@@ -159,74 +159,60 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
   const [departments, setDepartments] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [regionsReady, setRegionsReady] = useState(false);
   const regionLayerRef = useRef<L.GeoJSON | null>(null);
   const departmentLayerRef = useRef<L.GeoJSON | null>(null);
   const mapRef = useRef<L.Map | null>(null);
 
-  // Cargar todos los datos geográficos
   // Cargar regiones
   useEffect(() => {
-  fetch('/data/geo/cordoba-regions.geojson')
-    .then(res => res.json())
-    .then(data => {
-      // Ordenar regiones para evitar superposición
-      const order = ["Región Centro", "Región Este", "Región Oeste", "Región Sur", "Región Noroeste", "Región Noreste"];
-      const sortedFeatures = [...data.features].sort((a, b) => {
-        return order.indexOf(a.properties.name) - order.indexOf(b.properties.name);
+    fetch('/data/geo/cordoba-regions.geojson')
+      .then(res => res.json())
+      .then(data => {
+        const order = ["Región Centro", "Región Este", "Región Oeste", "Región Sur", "Región Noroeste", "Región Noreste"];
+        const sortedFeatures = [...data.features].sort((a, b) => {
+          return order.indexOf(a.properties.name) - order.indexOf(b.properties.name);
+        });
+        setRegions(sortedFeatures);
+        setRegionsReady(true);
+        setLoading(false);
+        
+        // ✅ FORZAR ACTUALIZACIÓN DEL MAPA después de cargar las regiones
+        setTimeout(() => {
+          if (mapRef.current) {
+            mapRef.current.invalidateSize();
+          }
+        }, 100);
+      })
+      .catch(err => {
+        console.error('Error loading regions:', err);
+        setLoading(false);
       });
-      setRegions(sortedFeatures);
-      setLoading(false);
-    })
-    .catch(err => {
-      console.error('Error loading regions:', err);
-      setLoading(false);
-    });
-}, []);
+  }, []);
 
-// Mapeo de departamentos a regiones (agrega esto ANTES del useEffect)
-const deptToRegion: Record<string, { name: string; color: string; fillColor: string }> = {
-  "Punilla": { name: "Centro", color: "#3b82f6", fillColor: "#93c5fd" },
-  "Calamuchita": { name: "Centro", color: "#3b82f6", fillColor: "#93c5fd" },
-  "Totoral": { name: "Noroeste", color: "#f59e0b", fillColor: "#fde68a" },
-  "San Alberto": { name: "Noroeste", color: "#f59e0b", fillColor: "#fde68a" },
-  "San Javier": { name: "Oeste", color: "#ef4444", fillColor: "#fca5a5" },
-  "Tercero Arriba": { name: "Este", color: "#06b6d4", fillColor: "#a5f3fc" },
-  "Río Segundo": { name: "Noreste", color: "#10b981", fillColor: "#a7f3d0" },
-};
+  // Cargar departamentos
+  useEffect(() => {
+    fetch('/data/geo/cordoba-departments.geojson')
+      .then(res => res.json())
+      .then(data => {
+        setDepartments(data.features);
+      })
+      .catch(err => console.error('Error loading departments:', err));
+  }, []);
 
-// Cargar departamentos (REEMPLAZA este useEffect)
-useEffect(() => {
-  fetch('/data/geo/cordoba-departments.geojson')
-    .then(res => res.json())
-    .then(data => {
-      // Asignar colores según el mapeo
-      const coloredFeatures = data.features.map((feature: any) => {
-        const deptName = feature.properties.nombre;
-        const region = deptToRegion[deptName];
-        if (region) {
-          feature.properties.color = region.color;
-          feature.properties.fillColor = region.fillColor;
-          feature.properties.regionName = region.name;
-        }
-        return feature;
-      });
-      setDepartments(coloredFeatures);
-    })
-    .catch(err => console.error('Error loading departments:', err));
-}, []);
-
-useEffect(() => {
-  fetch('/data/geo/cordoba-cities.json')
-    .then(res => res.json())
-    .then(data => {
-      setCities(data.features);
-    })
-    .catch(err => console.error('Error loading cities:', err));
-}, []);
+  // Cargar ciudades
+  useEffect(() => {
+    fetch('/data/geo/cordoba-cities.json')
+      .then(res => res.json())
+      .then(data => {
+        setCities(data.features);
+      })
+      .catch(err => console.error('Error loading cities:', err));
+  }, []);
 
   // Manejar capa de polígonos de regiones
   useEffect(() => {
-    if (!mapRef.current || loading) return;
+    if (!mapRef.current || !regionsReady || regions.length === 0) return;
     
     const map = mapRef.current;
     
@@ -235,7 +221,7 @@ useEffect(() => {
       regionLayerRef.current = null;
     }
     
-    if (layers.regions && regions.length > 0) {
+    if (layers.regions) {
       regionLayerRef.current = L.geoJSON(regions as any, {
         style: (feature) => ({
           color: feature?.properties?.color || "#3b82f6",
@@ -250,11 +236,11 @@ useEffect(() => {
         },
       }).addTo(map);
     }
-  }, [regions, layers.regions, loading]);
+  }, [regions, regionsReady, layers.regions]);
 
   // Manejar capa de polígonos de departamentos
   useEffect(() => {
-    if (!mapRef.current || loading) return;
+    if (!mapRef.current || departments.length === 0) return;
     
     const map = mapRef.current;
     
@@ -263,7 +249,7 @@ useEffect(() => {
       departmentLayerRef.current = null;
     }
     
-    if (layers.departments && departments.length > 0) {
+    if (layers.departments) {
       departmentLayerRef.current = L.geoJSON(departments as any, {
         style: {
           color: "#64748b",
@@ -278,7 +264,7 @@ useEffect(() => {
         },
       }).addTo(map);
     }
-  }, [departments, layers.departments, loading]);
+  }, [departments, layers.departments]);
 
   if (loading) {
     return <div className="flex items-center justify-center h-full">Cargando mapa...</div>;
