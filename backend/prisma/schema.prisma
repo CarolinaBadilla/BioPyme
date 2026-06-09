@@ -137,6 +137,38 @@ model Company {
   @@map("companies")
 }
 
+// Agregar después del modelo Company
+
+model Localidad {
+  id          Int     @id @default(autoincrement())
+  nombre      String
+  habitantes  Int
+  departamento String
+  region      String
+  intendente  String
+  vinculo     String?
+  empresas    String?
+  latitud     Float
+  longitud    Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("localidades")
+}
+
+model YpfStation {
+  id        Int     @id @default(autoincrement())
+  nombre    String
+  direccion String
+  telefono  String?
+  latitud   Float
+  longitud  Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ypf_stations")
+}
+
 model Request {
   id          Int      @id @default(autoincrement())
   companyId   Int

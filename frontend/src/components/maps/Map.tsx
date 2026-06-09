@@ -5,6 +5,47 @@ import { useState, useEffect, useRef } from "react";
 import type { Company } from "../../types";
 import LayerControl from "./LayerControl";
 
+// Agregar estos iconos después de los imports
+const createLocalidadIcon = () => {
+  return L.divIcon({
+    html: `<div style="
+      background-color: #f59e0b;
+      width: 24px;
+      height: 24px;
+      border-radius: 12px 12px 4px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    ">🏘️</div>`,
+    className: "localidad-marker",
+    iconSize: [24, 24],
+    iconAnchor: [12, 24],
+  });
+};
+
+const createYpfIcon = () => {
+  return L.divIcon({
+    html: `<div style="
+      background-color: #2563eb;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    ">⛽</div>`,
+    className: "ypf-marker",
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
+};
+
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -149,6 +190,8 @@ interface MapProps {
     departments: boolean;
     cities: boolean;
     plants: boolean;
+    localidades: boolean;  // 👈 AGREGAR
+    ypf: boolean;
   };
   onToggleLayer: (layer: string) => void;
 }
@@ -163,6 +206,21 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
   const regionLayerRef = useRef<L.GeoJSON | null>(null);
   const departmentLayerRef = useRef<L.GeoJSON | null>(null);
   const mapRef = useRef<L.Map | null>(null);
+
+  const [localidades, setLocalidades] = useState<any[]>([]);
+  const [ypfStations, setYpfStations] = useState<any[]>([]);
+
+  // Cargar datos
+  useEffect(() => {
+    Promise.all([
+      fetch('https://biopyme-backend.onrender.com/api/localidades').then(res => res.json()),
+      fetch('https://biopyme-backend.onrender.com/api/ypf').then(res => res.json()),
+    ]).then(([localidadesData, ypfData]) => {
+      setLocalidades(localidadesData);
+      setYpfStations(ypfData);
+    }).catch(err => console.error('Error loading data:', err));
+  }, []);
+
 
   // Cargar regiones
   useEffect(() => {
@@ -315,6 +373,40 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
           </Marker>
         );
       })}
+
+      {/* Localidades */}
+      {layers.localidades && localidades.map((loc: any) => (
+        <Marker
+          key={`localidad-${loc.id}`}
+          position={[loc.latitud, loc.longitud]}
+          icon={createLocalidadIcon()}
+        >
+          <Popup>
+            <strong>🏘️ {loc.nombre}</strong><br/>
+            👥 Habitantes: {loc.habitantes.toLocaleString()}<br/>
+            👤 Intendente: {loc.intendente}<br/>
+            🔗 Vínculo: {loc.vinculo || 'No especificado'}<br/>
+            🏭 Empresas: {loc.empresas || 'No especificadas'}<br/>
+            📍 Departamento: {loc.departamento}<br/>
+            🗺️ Región: {loc.region}
+          </Popup>
+        </Marker>
+      ))}
+
+      {/* Estaciones YPF */}
+      {layers.ypf && ypfStations.map((station: any) => (
+        <Marker
+          key={`ypf-${station.id}`}
+          position={[station.latitud, station.longitud]}
+          icon={createYpfIcon()}
+        >
+          <Popup>
+            <strong>⛽ {station.nombre}</strong><br/>
+            📍 {station.direccion}<br/>
+            📞 {station.telefono || 'No disponible'}
+          </Popup>
+        </Marker>
+      ))}
 
       {/* Plantas */}
       {layers.plants && companies.map((company) => (

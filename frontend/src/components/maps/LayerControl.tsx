@@ -6,6 +6,8 @@ interface LayerControlProps {
     departments: boolean;
     cities: boolean;
     plants: boolean;
+    localidades: boolean;  // 👈 AGREGAR
+    ypf: boolean;
   };
   onToggle: (layer: string) => void;
 }
@@ -46,6 +48,15 @@ export default function LayerControl({ layers, onToggle }: LayerControlProps) {
         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
           <input type="checkbox" checked={layers.plants} onChange={() => onToggle('plants')} />
           <span>🌱 Plantas</span>
+        </label>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <input type="checkbox" checked={layers.localidades} onChange={() => onToggle('localidades')} />
+          <span>🏘️ Localidades adheridas</span>
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <input type="checkbox" checked={layers.ypf} onChange={() => onToggle('ypf')} />
+          <span>⛽ Estaciones YPF</span>
         </label>
       </div>
     </div>

@@ -7,6 +7,9 @@ import { RequestsModule } from './modules/requests/requests.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { MapModule } from './modules/map/map.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { YpfModule } from './modules/ypf/ypf.module';
+import { LocalidadesModule } from './modules/localidades/localidades.module';
+
 
 @Module({
   imports: [
@@ -17,7 +20,9 @@ import { PrismaModule } from './prisma/prisma.module';
     CompaniesModule,
     RequestsModule,
     DashboardModule,
-    MapModule, // ← Agregar
+    MapModule,
+    YpfModule,
+    LocalidadesModule,
   ],
 })
 export class AppModule {}
