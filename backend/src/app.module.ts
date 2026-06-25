@@ -9,7 +9,8 @@ import { MapModule } from './modules/map/map.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { YpfModule } from './modules/ypf/ypf.module';
 import { LocalidadesModule } from './modules/localidades/localidades.module';
-
+import { EstacionesBlancasModule } from './modules/estaciones-blancas/estaciones-blancas.module'; // 👈 AGREGAR
+import { DepartamentosModule } from './modules/departamentos/departamentos.module';
 
 @Module({
   imports: [
@@ -23,6 +24,8 @@ import { LocalidadesModule } from './modules/localidades/localidades.module';
     MapModule,
     YpfModule,
     LocalidadesModule,
+    EstacionesBlancasModule,
+    DepartamentosModule,
   ],
 })
 export class AppModule {}

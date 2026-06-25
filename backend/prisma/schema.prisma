@@ -26,12 +26,23 @@ model Region {
 }
 
 model Department {
-  id          Int        @id @default(autoincrement())
-  name        String     @unique
-  regionId    Int
-  color       String     @default("#60a5fa")
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id                              Int        @id @default(autoincrement())
+  name                            String     @unique
+  regionId                        Int
+  totalViviendas                  Int?       @default(0)  // ← Agregar ? y default
+  viviendasColectivas             Int?       @default(0)
+  viviendasParticulares           Int?       @default(0)
+  viviendasParticularesMoradores  Int?       @default(0)
+  hogares                         Int?       @default(0)
+  poblacionTotal                  Int?       @default(0)
+  poblacionViviendasParticulares  Int?       @default(0)
+  poblacionViviendasColectivas    Int?       @default(0)
+  poblacionCalle                  Int?       @default(0)
+  mujeres                         Int?       @default(0)
+  varones                         Int?       @default(0)
+  color                           String     @default("#60a5fa")
+  createdAt                       DateTime   @default(now())
+  updatedAt                       DateTime   @updatedAt
 
   region      Region     @relation(fields: [regionId], references: [id])
   cities      City[]
@@ -163,10 +174,27 @@ model YpfStation {
   telefono  String?
   latitud   Float
   longitud  Float
+  localidad   String? 
+  departamento String? 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("ypf_stations")
+}
+
+model EstacionBlanca {
+  id          Int     @id @default(autoincrement())
+  nombre      String
+  direccion   String
+  telefono    String?
+  latitud     Float
+  longitud    Float
+  localidad   String?
+  departamento String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("estaciones_blancas")
 }
 
 model Request {
