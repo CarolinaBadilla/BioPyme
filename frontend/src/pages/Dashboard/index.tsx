@@ -21,8 +21,9 @@ export default function Dashboard() {
     departments: false,
     cities: true,
     plants: true,
-    localidades: true,  // 👈 Agregar
-    ypf: true,          // 👈 Agregar
+    localidades: true,  
+    ypf: true,
+    estacionesBlancas: true,          
   });
 
   const handleBackToList = () => {

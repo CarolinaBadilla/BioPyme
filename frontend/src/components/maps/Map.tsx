@@ -4,6 +4,9 @@ import "leaflet/dist/leaflet.css";
 import { useState, useEffect, useRef } from "react";
 import type { Company } from "../../types";
 import LayerControl from "./LayerControl";
+import AddPointControl from "./AddPointControl";
+import DistanceCalculator from "./DistanceCalculator";
+import MapControls from "./MapControls";
 
 // Agregar estos iconos después de los imports
 const createLocalidadIcon = () => {
@@ -26,6 +29,23 @@ const createLocalidadIcon = () => {
   });
 };
 
+const createTempPointIcon = () => {
+  return L.divIcon({
+    html: `<div style="
+      background-color: #8b5cf6;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      animation: pulse 1.5s ease-in-out infinite;
+    "></div>`,
+    className: "temp-marker",
+    iconSize: [16, 16],
+  });
+};
+
+
 const createYpfIcon = () => {
   return L.divIcon({
     html: `<div style="
@@ -41,6 +61,28 @@ const createYpfIcon = () => {
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     ">⛽</div>`,
     className: "ypf-marker",
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
+};
+
+// Icono para estaciones bandera blanca (distinto al de YPF)
+const createEstacionBlancaIcon = () => {
+  return L.divIcon({
+    html: `<div style="
+      background-color: #ffffff;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      border: 2px solid #1e40af;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      color: #1e40af;
+    ">⛽</div>`,
+    className: "estacion-blanca-marker",
     iconSize: [24, 24],
     iconAnchor: [12, 12],
   });
@@ -190,8 +232,9 @@ interface MapProps {
     departments: boolean;
     cities: boolean;
     plants: boolean;
-    localidades: boolean;  // 👈 AGREGAR
+    localidades: boolean; 
     ypf: boolean;
+    estacionesBlancas: boolean;
   };
   onToggleLayer: (layer: string) => void;
 }
@@ -206,9 +249,17 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
   const regionLayerRef = useRef<L.GeoJSON | null>(null);
   const departmentLayerRef = useRef<L.GeoJSON | null>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const [isAddingPoint, setIsAddingPoint] = useState(false);
+  const [isMeasuringDistance, setIsMeasuringDistance] = useState(false);
+  const [distancePoints, setDistancePoints] = useState<any[]>([]);
+  const [distanceResult, setDistanceResult] = useState<number | null>(null);
+  const [tempPoints, setTempPoints] = useState<any[]>([]);
+  const [departamentosDatos, setDepartamentosDatos] = useState<Record<string, any>>({});
 
   const [localidades, setLocalidades] = useState<any[]>([]);
   const [ypfStations, setYpfStations] = useState<any[]>([]);
+  const [estacionesBlancas, setEstacionesBlancas] = useState<any[]>([]);
+
 
   // Cargar datos
   useEffect(() => {
@@ -268,61 +319,344 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
       .catch(err => console.error('Error loading cities:', err));
   }, []);
 
-  // Manejar capa de polígonos de regiones
-  useEffect(() => {
-    if (!mapRef.current || !regionsReady || regions.length === 0) return;
-    
-    const map = mapRef.current;
-    
-    if (regionLayerRef.current) {
-      map.removeLayer(regionLayerRef.current);
-      regionLayerRef.current = null;
-    }
-    
-    if (layers.regions) {
-      regionLayerRef.current = L.geoJSON(regions as any, {
-        style: (feature) => ({
-          color: feature?.properties?.color || "#3b82f6",
-          weight: 1.5,
-          fillColor: feature?.properties?.fillColor || "#93c5fd",
-          fillOpacity: 0.15,
-        }),
-        onEachFeature: (feature, layer) => {
-          if (feature?.properties) {
-            layer.bindPopup(`<strong>🗺️ ${feature.properties.name}</strong>`);
-          }
-        },
-      }).addTo(map);
-    }
-  }, [regions, regionsReady, layers.regions]);
+  // Reemplaza este useEffect en tu Map.tsx
+useEffect(() => {
+  fetch(`https://biopyme-backend.onrender.com/api/estaciones-blancas`)
+    .then(res => {
+      if (!res.ok) {
+        throw new Error(`Error ${res.status}: ${res.statusText}`);
+      }
+      return res.json();
+    })
+    .then(data => {
+      console.log('Estaciones blancas cargadas:', data.length);
+      setEstacionesBlancas(data);
+    })
+    .catch(err => {
+      console.warn('Error cargando estaciones blancas:', err);
+      setEstacionesBlancas([]); // 👈 Importante: no romper la página
+    });
+}, []);
 
-  // Manejar capa de polígonos de departamentos
-  useEffect(() => {
-    if (!mapRef.current || departments.length === 0) return;
-    
-    const map = mapRef.current;
-    
-    if (departmentLayerRef.current) {
-      map.removeLayer(departmentLayerRef.current);
-      departmentLayerRef.current = null;
-    }
-    
-    if (layers.departments) {
-      departmentLayerRef.current = L.geoJSON(departments as any, {
-        style: {
-          color: "#64748b",
-          weight: 1,
-          fillColor: "#cbd5e1",
-          fillOpacity: 0.2,
-        },
-        onEachFeature: (feature, layer) => {
-          if (feature?.properties) {
-            layer.bindPopup(`<strong>📋 ${feature.properties.nombre}</strong>`);
+  // Manejar capa de polígonos de regiones (con control de interacción)
+    useEffect(() => {
+      if (!mapRef.current || !regionsReady || regions.length === 0) return;
+      
+      const map = mapRef.current;
+      
+      if (regionLayerRef.current) {
+        map.removeLayer(regionLayerRef.current);
+        regionLayerRef.current = null;
+      }
+      
+      if (layers.regions) {
+        regionLayerRef.current = L.geoJSON(regions as any, {
+          style: (feature) => ({
+            color: feature?.properties?.color || "#3b82f6",
+            weight: 1.5,
+            fillColor: feature?.properties?.fillColor || "#93c5fd",
+            fillOpacity: 0.15,
+          }),
+          // 👈 IMPORTANTE: controlar interacción cuando está activo agregar/medir
+          interactive: !isAddingPoint && !isMeasuringDistance,
+          onEachFeature: (feature, layer) => {
+            if (feature?.properties) {
+              // Solo bindear popup si no estamos en modo edición
+              if (!isAddingPoint && !isMeasuringDistance) {
+                layer.bindPopup(`<strong>🗺️ ${feature.properties.name}</strong>`);
+              } else {
+                // 👈 Si estamos en modo edición, NO mostrar popup
+                layer.unbindPopup();
+              }
+            }
+          },
+        }).addTo(map);
+      }
+    }, [regions, regionsReady, layers.regions, isAddingPoint, isMeasuringDistance]);
+
+
+// ============================================
+// Cargar datos demográficos de departamentos
+// ============================================
+useEffect(() => {
+  const API_URL = import.meta.env.VITE_API_URL || 'https://biopyme-backend.onrender.com/api';
+  fetch(`${API_URL}/departamentos`)
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      const map: Record<string, any> = {};
+      data.forEach((d: any) => {
+        map[d.name] = d;
+      });
+      setDepartamentosDatos(map);
+      console.log('✅ Datos departamentos cargados:', Object.keys(map).length);
+    })
+    .catch(err => {
+      console.warn('Error cargando departamentos:', err);
+    });
+}, []);
+
+// ============================================
+// Manejar capa de polígonos de departamentos
+// ============================================
+useEffect(() => {
+  if (!mapRef.current || departments.length === 0) return;
+  
+  const map = mapRef.current;
+  
+  if (departmentLayerRef.current) {
+    map.removeLayer(departmentLayerRef.current);
+    departmentLayerRef.current = null;
+  }
+  
+  if (layers.departments) {
+    departmentLayerRef.current = L.geoJSON(departments as any, {
+      style: {
+        color: "#64748b",
+        weight: 1,
+        fillColor: "#cbd5e1",
+        fillOpacity: 0.2,
+      },
+      interactive: !isAddingPoint && !isMeasuringDistance,
+      onEachFeature: (feature, layer) => {
+        if (feature?.properties) {
+          const deptName = feature.properties.nombre;
+          const datos = departamentosDatos[deptName];
+          
+          if (!isAddingPoint && !isMeasuringDistance) {
+            let popupContent = `<strong>📋 ${deptName}</strong><hr style="margin: 4px 0"/>`;
+            
+            if (datos) {
+              popupContent += `
+                🏠 Viviendas totales: ${datos.totalViviendas?.toLocaleString() || 'N/D'}<br/>
+                🏢 Viviendas colectivas: ${datos.viviendasColectivas?.toLocaleString() || 'N/D'}<br/>
+                🏡 Viviendas particulares: ${datos.viviendasParticulares?.toLocaleString() || 'N/D'}<br/>
+                👨‍👩‍👧‍👦 Hogares: ${datos.hogares?.toLocaleString() || 'N/D'}<br/>
+                <hr style="margin: 4px 0"/>
+                👥 Población total: ${datos.poblacionTotal?.toLocaleString() || 'N/D'}<br/>
+                👩 Mujeres: ${datos.mujeres?.toLocaleString() || 'N/D'}<br/>
+                👨 Varones: ${datos.varones?.toLocaleString() || 'N/D'}
+              `;
+            } else {
+              popupContent += `<em>Datos no disponibles</em>`;
+            }
+            
+            layer.bindPopup(popupContent);
+          } else {
+            layer.unbindPopup();
           }
-        },
-      }).addTo(map);
+        }
+      },
+    }).addTo(map);
+  }
+}, [departments, layers.departments, isAddingPoint, isMeasuringDistance, departamentosDatos]);
+
+useEffect(() => {
+  if (!mapRef.current || !isMeasuringDistance) return;
+  
+  const map = mapRef.current;
+  
+  const handleMapClick = (e: any) => {
+    if (distancePoints.length >= 2) return;
+    
+    const { lat, lng } = e.latlng;
+    const newPoints = [...distancePoints, { lat, lng }];
+    setDistancePoints(newPoints);
+    
+    // Crear marcador visual temporal
+    const marker = L.marker([lat, lng], {
+      icon: L.divIcon({
+        html: `<div style="
+          background-color: ${newPoints.length === 1 ? '#2563eb' : '#ef4444'};
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          border: 3px solid white;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 11px;
+          font-weight: bold;
+        ">${newPoints.length}</div>`,
+        className: "distance-marker",
+        iconSize: [22, 22],
+      }),
+    }).addTo(map);
+    
+    // Guardar referencia para limpiar después
+    setTimeout(() => {
+      map.removeLayer(marker);
+    }, 5000);
+    
+    if (newPoints.length === 2) {
+      const R = 6371;
+      const dLat = (newPoints[1].lat - newPoints[0].lat) * Math.PI / 180;
+      const dLon = (newPoints[1].lng - newPoints[0].lng) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(newPoints[0].lat * Math.PI / 180) * Math.cos(newPoints[1].lat * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const dist = R * c;
+      
+      setDistanceResult(dist);
+      
+      // Dibujar línea
+      const polyline = L.polyline(
+        [[newPoints[0].lat, newPoints[0].lng], [newPoints[1].lat, newPoints[1].lng]],
+        { color: '#2563eb', weight: 3, dashArray: '8, 4' }
+      ).addTo(map);
+      
+      setTimeout(() => {
+        map.removeLayer(polyline);
+      }, 5000);
+      
+      // Desactivar después de 2 segundos
+      setTimeout(() => {
+        setIsMeasuringDistance(false);
+      }, 2000);
     }
-  }, [departments, layers.departments]);
+  };
+  
+  map.on('click', handleMapClick);
+  
+  return () => {
+    map.off('click', handleMapClick);
+  };
+}, [isMeasuringDistance, distancePoints, mapRef.current]);
+
+
+
+// ============================================
+// EFECTO: AGREGAR PUNTO - Con popup en el mapa
+// ============================================
+useEffect(() => {
+  if (!mapRef.current || !isAddingPoint) return;
+
+  const map = mapRef.current;
+  let currentMarker: L.Marker | null = null;
+
+  const handleMapClick = (e: any) => {
+    if (currentMarker) return; // Si ya hay un popup abierto, ignorar
+
+    const { lat, lng } = e.latlng;
+    const id = `point-${Date.now()}`;
+
+    // Crear marcador temporal
+    currentMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+    // Crear popup con formulario
+    currentMarker.bindPopup(`
+      <div style="min-width:200px;">
+        <strong>📍 Nuevo punto</strong><br/>
+        Lat: ${lat.toFixed(6)}<br/>
+        Lng: ${lng.toFixed(6)}<br/>
+        <input id="point-name-${id}" type="text" placeholder="Nombre del punto" style="margin-top: 5px; width: 100%; padding: 4px;"/>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button id="save-point-${id}" style="flex:1; background: #2563eb; color: white; border: none; padding: 6px; border-radius: 4px; cursor: pointer;">
+            Guardar
+          </button>
+          <button id="cancel-point-${id}" style="flex:1; background: #ef4444; color: white; border: none; padding: 6px; border-radius: 4px; cursor: pointer;">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    `).openPopup();
+
+    // Función para guardar
+    const handleSave = () => {
+      const nameInput = document.getElementById(`point-name-${id}`) as HTMLInputElement;
+      const name = nameInput?.value || `Punto ${tempPoints.length + 1}`;
+      
+      const newPoint = {
+        id: `temp-${Date.now()}`,
+        lat,
+        lng,
+        name,
+      };
+      setTempPoints([...tempPoints, newPoint]);
+      console.log('✅ Punto agregado:', newPoint);
+      
+      if (currentMarker) {
+        currentMarker.remove();
+        currentMarker = null;
+      }
+      setIsAddingPoint(false);
+    };
+
+    // Función para cancelar
+    const handleCancel = () => {
+      if (currentMarker) {
+        currentMarker.remove();
+        currentMarker = null;
+      }
+      setIsAddingPoint(false);
+    };
+
+    // Esperar a que el DOM esté listo
+    setTimeout(() => {
+      const saveBtn = document.getElementById(`save-point-${id}`);
+      const cancelBtn = document.getElementById(`cancel-point-${id}`);
+      if (saveBtn) saveBtn.addEventListener('click', handleSave);
+      if (cancelBtn) cancelBtn.addEventListener('click', handleCancel);
+    }, 200);
+  };
+
+  map.on('click', handleMapClick);
+
+  return () => {
+    map.off('click', handleMapClick);
+    if (currentMarker) {
+      currentMarker.remove();
+      currentMarker = null;
+    }
+  };
+}, [isAddingPoint, mapRef.current, tempPoints]);
+
+
+
+// Cargar datos demográficos de departamentos
+// ============================================
+useEffect(() => {
+  const API_URL = import.meta.env.VITE_API_URL || 'https://biopyme-backend.onrender.com/api';
+  fetch(`${API_URL}/departamentos`)
+    .then(res => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    })
+    .then(data => {
+      const map: Record<string, any> = {};
+      data.forEach((d: any) => {
+        map[d.name] = d;
+      });
+      setDepartamentosDatos(map);
+      console.log('✅ Datos departamentos cargados:', Object.keys(map).length);
+    })
+    .catch(err => {
+      console.warn('Error cargando departamentos:', err);
+    });
+}, []);
+
+const handleAddPoint = (point: { lat: number; lng: number; name: string }) => {
+  const newPoint = {
+    id: `temp-${Date.now()}`,
+    lat: point.lat,
+    lng: point.lng,
+    name: point.name,
+  };
+  setTempPoints([...tempPoints, newPoint]);
+  console.log('✅ Punto agregado:', newPoint);
+  setIsAddingPoint(false);
+};
+
+// FUNCIÓN handleDistanceCalculated
+const handleDistanceCalculated = (dist: number, p1: any, p2: any) => {
+  setDistanceResult(dist);
+  setDistancePoints([p1, p2]);
+};
 
   if (loading) {
     return <div className="flex items-center justify-center h-full">Cargando mapa...</div>;
@@ -337,6 +671,30 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
     >
       <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
       <LayerControl layers={layers} onToggle={onToggleLayer} />
+  <MapControls
+    isAddingPoint={isAddingPoint}
+    setIsAddingPoint={setIsAddingPoint}
+    isMeasuringDistance={isMeasuringDistance}
+    setIsMeasuringDistance={setIsMeasuringDistance}
+    distancePoints={distancePoints}
+    distanceResult={distanceResult}
+    setDistancePoints={setDistancePoints}  
+    setDistanceResult={setDistanceResult}   
+  />
+
+  {/* 👈 Lógica de agregar punto */}
+  <AddPointControl
+    onPointAdded={handleAddPoint}
+    isActive={isAddingPoint}
+    setIsActive={setIsAddingPoint}
+  />
+
+  {/* 👈 Lógica de medir distancia */}
+  <DistanceCalculator
+    onDistanceCalculated={handleDistanceCalculated}
+    isActive={isMeasuringDistance}
+    setIsActive={setIsMeasuringDistance}
+  />
 
       {/* Etiquetas de regiones */}
       <RegionLabels regions={regions} visible={layers.regions} />
@@ -401,9 +759,58 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
           icon={createYpfIcon()}
         >
           <Popup>
-            <strong>⛽ {station.nombre}</strong><br/>
-            📍 {station.direccion}<br/>
-            📞 {station.telefono || 'No disponible'}
+            <div style={{ minWidth: '150px' }}>
+            <strong style={{ color: '#1e40af', fontSize: '14px' }}>⛽ {station.nombre}</strong><br/>
+            📍 {station.direccion}
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+
+      {/* Estaciones bandera blanca */}
+      {layers.estacionesBlancas && estacionesBlancas.map((estacion: any) => (
+        <Marker
+          key={`blanca-${estacion.id}`}
+          position={[estacion.latitud, estacion.longitud]}
+          icon={createEstacionBlancaIcon()}
+        >
+          <Popup>
+            <div style={{ minWidth: '150px' }}>
+              <strong style={{ color: '#1e40af' }}>⛽ {estacion.nombre}</strong><br/>
+              📍 {estacion.direccion}
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+
+      {/* 👈 AGREGAR ESTE BLOQUE - Puntos temporales */}
+      {tempPoints.map((point) => (
+        <Marker
+          key={point.id}
+          position={[point.lat, point.lng]}
+          icon={createTempPointIcon()}
+        >
+          <Popup>
+            <strong>📍 {point.name}</strong><br/>
+            Lat: {point.lat.toFixed(6)}<br/>
+            Lng: {point.lng.toFixed(6)}<br/>
+            <button 
+              onClick={() => {
+                setTempPoints(tempPoints.filter(p => p.id !== point.id));
+              }}
+              style={{
+                marginTop: '8px',
+                width: '100%',
+                backgroundColor: '#ef4444',
+                color: 'white',
+                border: 'none',
+                padding: '5px',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              🗑️ Eliminar punto
+            </button>
           </Popup>
         </Marker>
       ))}
