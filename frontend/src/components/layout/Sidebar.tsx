@@ -16,6 +16,11 @@ interface SidebarProps {
   onShowCharts: () => void;
   showCharts: boolean;
   onBackToList: () => void;
+  filterDepartamento: string; // 👈 AGREGAR
+  setFilterDepartamento: (value: string) => void; // 👈 AGREGAR
+  filterEstacionTipo: string; // 👈 AGREGAR
+  setFilterEstacionTipo: (value: string) => void; // 👈 AGREGAR
+  onFilterChange?: (depto: string, tipo: string) => void;
 }
 
 export default function Sidebar({
@@ -31,6 +36,11 @@ export default function Sidebar({
   onShowCharts,
   showCharts,
   onBackToList,
+  filterDepartamento, // 👈 RECIBIR
+  setFilterDepartamento, // 👈 RECIBIR
+  filterEstacionTipo, // 👈 RECIBIR
+  setFilterEstacionTipo, // 👈 RECIBIR
+  onFilterChange, // 👈 RECIBIR
 }: SidebarProps) {
   const { user } = useAuth();
   
@@ -331,14 +341,14 @@ export default function Sidebar({
             </div>
           </div>
 
-          <button onClick={handleSave} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition shadow-sm">
+          {/*<button onClick={handleSave} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition shadow-sm">
             {isOwner ? '💾 Guardar' : '📊 Aplicar cambios'}
-          </button>
+          </button>*/}
 
           <div className="flex gap-2">
             <button onClick={exportToExcel} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-sm font-medium">📊 Excel</button>
             <button onClick={exportToPDF} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-sm font-medium">📄 PDF</button>
-            <button onClick={onShowCharts} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium">{showCharts ? "🗺️ Mapa" : "📈 Gráficos"}</button>
+            {/*<button onClick={onShowCharts} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium">{showCharts ? "🗺️ Mapa" : "📈 Gráficos"}</button>*/}
           </div>
 
           <button onClick={() => setShowMoreData(!showMoreData)} className="w-full bg-blue-100 hover:bg-blue-200 text-blue-700 py-2 rounded-lg text-sm transition">
@@ -371,7 +381,7 @@ export default function Sidebar({
 
         <div className="p-4 border-t border-blue-200 bg-white">
           <label className="text-xs text-blue-600 block mb-2">Radio de influencia: {radiusKm} km</label>
-          <Slider value={radiusKm} onChange={(_, v) => onRadiusChange(v as number)} min={0.5} max={30} step={0.5} sx={{ color: "#3b82f6" }} />
+          <Slider value={radiusKm} onChange={(_, v) => onRadiusChange(v as number)} min={0.5} max={50} step={0.5} sx={{ color: "#3b82f6" }} />
         </div>
       </div>
     );
@@ -392,6 +402,57 @@ export default function Sidebar({
           <option value="planta">🌱 Plantas</option>
           <option value="expendio">⛽ Expendios</option>
           <option value="almacenadora">📦 Almacenadoras</option>
+        </select>
+
+        <select 
+          value={filterDepartamento} 
+          onChange={(e) => {
+            const value = e.target.value;
+            setFilterDepartamento(value);
+            if (onFilterChange) onFilterChange(value, filterEstacionTipo);          }}
+          className="w-full p-2.5 text-sm bg-white border border-blue-200 rounded-lg text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="todos">📍 Todos los departamentos</option>
+          <option value="Capital">Capital</option>
+          <option value="Colon">Colón</option>
+          <option value="Calamuchita">Calamuchita</option>
+          <option value="Cruz Del Eje">Cruz del Eje</option>
+          <option value="General Roca">General Roca</option>
+          <option value="General San Martín">General San Martín</option>
+          <option value="Ischilin">Ischilín</option>
+          <option value="Juarez Celman">Juárez Celman</option>
+          <option value="Marcos Juarez">Marcos Juárez</option>
+          <option value="Minas">Minas</option>
+          <option value="Pocho">Pocho</option>
+          <option value="Presidente Roque Saenz Peña">Presidente Roque Sáenz Peña</option>
+          <option value="Punilla">Punilla</option>
+          <option value="Rio Cuarto">Río Cuarto</option>
+          <option value="Rio Primero">Río Primero</option>
+          <option value="Rio Seco">Río Seco</option>
+          <option value="Rio Segundo">Río Segundo</option>
+          <option value="San Alberto">San Alberto</option>
+          <option value="San Javier">San Javier</option>
+          <option value="San Justo">San Justo</option>
+          <option value="Santa Maria">Santa María</option>
+          <option value="Sobremonte">Sobremonte</option>
+          <option value="Tercero Arriba">Tercero Arriba</option>
+          <option value="Totoral">Totoral</option>
+          <option value="Tulumba">Tulumba</option>
+          <option value="Union">Unión</option>
+        </select>
+
+        <select 
+          value={filterEstacionTipo} 
+          onChange={(e) => {
+          const value = e.target.value;
+          setFilterEstacionTipo(value);
+          if (onFilterChange) onFilterChange(filterDepartamento, value);
+        }}
+          className="w-full p-2.5 text-sm bg-white border border-blue-200 rounded-lg text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="todos">⛽ Todas las estaciones</option>
+          <option value="ypf">🔵 YPF</option>
+          <option value="blanca">⚪ Bandera blanca</option>
         </select>
 
         <div>

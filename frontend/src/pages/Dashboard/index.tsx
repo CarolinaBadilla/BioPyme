@@ -15,6 +15,14 @@ export default function Dashboard() {
   const { selectedCompany, setSelectedCompany } = useCompanyStore();
   const { filters, radiusKm, showCharts, setFilters, setRadiusKm, setShowCharts } = useFiltersStore();
   const [localCompanies, setLocalCompanies] = useState<Company[]>(companies);
+  const [showDisclaimer, setShowDisclaimer] = useState(true);
+  const [filterDepartamento, setFilterDepartamento] = useState<string>("todos");
+  const [filterEstacionTipo, setFilterEstacionTipo] = useState<string>("todos");
+  const [mapKey, setMapKey] = useState(0);
+
+  useEffect(() => {
+    console.log('🔄 Filtro cambiado - Depto:', filterDepartamento, 'Tipo:', filterEstacionTipo);
+  }, [filterDepartamento, filterEstacionTipo]);
   
   const [layers, setLayers] = useState({
     regions: true,
@@ -34,6 +42,14 @@ export default function Dashboard() {
   const handleUpdateCompany = async (updated: any) => {
     await updateCompany(updated.id, updated);
     setSelectedCompany(updated);
+  };
+
+  // Agregar después de handleUpdateCompanyLocal
+  const handleFilterChange = (depto: string, tipo: string) => {
+    setFilterDepartamento(depto);
+    setFilterEstacionTipo(tipo);
+    // Forzar actualización del mapa
+    setMapKey(prev => prev + 1);
   };
 
   const toggleLayer = (layerName: string) => {
@@ -77,6 +93,22 @@ export default function Dashboard() {
         <LoginButton />
       </div>
 
+      {/* Disclaimer - Datos 2022 */}
+      {showDisclaimer && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex justify-between items-center flex-shrink-0">
+          <p className="text-sm text-amber-800">
+            📌 <strong>Nota:</strong> La información mostrada en esta plataforma corresponde al año <strong>2022</strong> 
+            (fuente: INDEC, Censo Nacional de Población, Hogares y Viviendas 2022).
+          </p>
+          <button 
+            onClick={() => setShowDisclaimer(false)}
+            className="text-amber-600 hover:text-amber-800 font-medium text-sm px-2 py-1 rounded hover:bg-amber-100 transition"
+          >
+            ✕ Cerrar
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           companies={companies}
@@ -91,6 +123,11 @@ export default function Dashboard() {
           onShowCharts={() => setShowCharts(!showCharts)}
           showCharts={showCharts}
           onBackToList={handleBackToList}
+          filterDepartamento={filterDepartamento}
+          setFilterDepartamento={setFilterDepartamento}
+          filterEstacionTipo={filterEstacionTipo}
+          setFilterEstacionTipo={setFilterEstacionTipo}
+          onFilterChange={handleFilterChange}
         />
 
         <div className="flex-1 flex flex-col p-4">
@@ -101,12 +138,15 @@ export default function Dashboard() {
           ) : (
             <div className="flex-1 rounded-xl overflow-hidden shadow-sm border border-blue-200 bg-white">
               <Map
+                key={mapKey}
                 companies={companies.filter(c => c.stockLiters >= filters.minStock)}
                 selectedCompany={selectedCompany}
                 onSelectCompany={setSelectedCompany}
                 radiusKm={radiusKm}
                 layers={layers}
                 onToggleLayer={toggleLayer}
+                filterDepartamento={filterDepartamento}
+                filterEstacionTipo={filterEstacionTipo}
               />
             </div>
           )}

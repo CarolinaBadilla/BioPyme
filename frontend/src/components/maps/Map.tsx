@@ -237,9 +237,11 @@ interface MapProps {
     estacionesBlancas: boolean;
   };
   onToggleLayer: (layer: string) => void;
+  filterDepartamento: string;
+  filterEstacionTipo: string;
 }
 
-export default function Map({ companies, selectedCompany, onSelectCompany, radiusKm, layers, onToggleLayer }: MapProps) {
+export default function Map({ companies, selectedCompany, onSelectCompany, radiusKm, layers, onToggleLayer, filterDepartamento, filterEstacionTipo }: MapProps) {
   const defaultCenter: [number, number] = [-31.4167, -64.1833];
   const [regions, setRegions] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
@@ -259,6 +261,24 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
   const [localidades, setLocalidades] = useState<any[]>([]);
   const [ypfStations, setYpfStations] = useState<any[]>([]);
   const [estacionesBlancas, setEstacionesBlancas] = useState<any[]>([]);
+
+  // En el Map, al principio del componente (después de los useState)
+  console.log('📊 MAP RENDER - Filtros recibidos:', {
+    filterDepartamento,
+    filterEstacionTipo,
+    ypfCount: ypfStations.length,
+    blancasCount: estacionesBlancas.length,
+    ypfFiltradas: ypfStations.filter(s => filterDepartamento === "todos" || s.departamento === filterDepartamento).length,
+    blancasFiltradas: estacionesBlancas.filter(s => filterDepartamento === "todos" || s.departamento === filterDepartamento).length
+  });
+
+  // Agregar este useEffect al principio del componente Map (con los otros useEffect)
+    useEffect(() => {
+      console.log('🔍 filterDepartamento:', filterDepartamento);
+      console.log('🔍 filterEstacionTipo:', filterEstacionTipo);
+      console.log('🔍 YPF con depto:', ypfStations.map(s => ({ nombre: s.nombre, depto: s.departamento })));
+      console.log('🔍 Blancas con depto:', estacionesBlancas.map(s => ({ nombre: s.nombre, depto: s.departamento })));
+    }, [filterDepartamento, filterEstacionTipo, ypfStations, estacionesBlancas]);
 
 
   // Cargar datos
@@ -751,8 +771,15 @@ const handleDistanceCalculated = (dist: number, p1: any, p2: any) => {
         </Marker>
       ))}
 
+      
       {/* Estaciones YPF */}
-      {layers.ypf && ypfStations.map((station: any) => (
+      {layers.ypf && ypfStations
+      .filter((station: any) => {
+        // 👈 CORREGIR: Filtrar por departamento
+        if (filterDepartamento === "todos") return true;
+        return station.departamento === filterDepartamento;
+      })
+      .map((station: any) => (
         <Marker
           key={`ypf-${station.id}`}
           position={[station.latitud, station.longitud]}
@@ -760,28 +787,36 @@ const handleDistanceCalculated = (dist: number, p1: any, p2: any) => {
         >
           <Popup>
             <div style={{ minWidth: '150px' }}>
-            <strong style={{ color: '#1e40af', fontSize: '14px' }}>⛽ {station.nombre}</strong><br/>
-            📍 {station.direccion}
+              <strong style={{ color: '#1e40af', fontSize: '14px' }}>⛽ {station.nombre}</strong><br/>
+              📍 {station.direccion}
+              {station.departamento && <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '4px' }}>📍 {station.departamento}</div>}
             </div>
           </Popup>
         </Marker>
       ))}
 
       {/* Estaciones bandera blanca */}
-      {layers.estacionesBlancas && estacionesBlancas.map((estacion: any) => (
-        <Marker
-          key={`blanca-${estacion.id}`}
-          position={[estacion.latitud, estacion.longitud]}
-          icon={createEstacionBlancaIcon()}
-        >
-          <Popup>
-            <div style={{ minWidth: '150px' }}>
-              <strong style={{ color: '#1e40af' }}>⛽ {estacion.nombre}</strong><br/>
-              📍 {estacion.direccion}
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+      {layers.estacionesBlancas && estacionesBlancas
+        .filter((estacion: any) => {
+          // 👈 CORREGIR: Filtrar por departamento
+          if (filterDepartamento === "todos") return true;
+          return estacion.departamento === filterDepartamento;
+        })
+        .map((estacion: any) => (
+          <Marker
+            key={`blanca-${estacion.id}`}
+            position={[estacion.latitud, estacion.longitud]}
+            icon={createEstacionBlancaIcon()}
+          >
+            <Popup>
+              <div style={{ minWidth: '150px' }}>
+                <strong style={{ color: '#1e40af' }}>⛽ {estacion.nombre}</strong><br/>
+                📍 {estacion.direccion}
+                {estacion.departamento && <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '4px' }}>📍 {estacion.departamento}</div>}
+              </div>
+            </Popup>
+          </Marker>
+        ))}
 
       {/* 👈 AGREGAR ESTE BLOQUE - Puntos temporales */}
       {tempPoints.map((point) => (
