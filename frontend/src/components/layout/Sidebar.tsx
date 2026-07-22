@@ -5,7 +5,6 @@ import { useAuth } from "../../hooks/useAuth";
 import { logger } from '../../utils/logger';
 import { verifyPassword } from '../../utils/passwordHash';
 import consorciosData from "../../data/consorcios.json";
-import api from '../../services/api';
 
 interface SidebarProps {
   companies: Company[];
@@ -162,15 +161,39 @@ const getStationsInRadius = async () => {
   }
 
   try {
+    // 👈 OBTENER EL TOKEN DEL localStorage
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      alert('No estás autenticado. Iniciá sesión nuevamente.');
+      return;
+    }
+
     console.log('🔄 Cargando estaciones desde la API...');
     
     const [ypfResponse, blancasResponse] = await Promise.all([
-      api.get('/ypf'),
-      api.get('/estaciones-blancas'),
+      fetch('https://biopyme-backend.onrender.com/api/ypf', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }).then(res => {
+        if (!res.ok) throw new Error(`Error YPF: ${res.status}`);
+        return res.json();
+      }),
+      fetch('https://biopyme-backend.onrender.com/api/estaciones-blancas', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }).then(res => {
+        if (!res.ok) throw new Error(`Error Blancas: ${res.status}`);
+        return res.json();
+      }),
     ]);
 
-    const ypfData = Array.isArray(ypfResponse.data) ? ypfResponse.data : [];
-    const blancasData = Array.isArray(blancasResponse.data) ? blancasResponse.data : [];
+    const ypfData = Array.isArray(ypfResponse) ? ypfResponse : [];
+    const blancasData = Array.isArray(blancasResponse) ? blancasResponse : [];
 
     console.log('📊 YPF cargadas:', ypfData.length);
     console.log('📊 Blancas cargadas:', blancasData.length);
