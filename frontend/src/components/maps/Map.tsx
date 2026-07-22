@@ -7,6 +7,7 @@ import LayerControl from "./LayerControl";
 import AddPointControl from "./AddPointControl";
 import DistanceCalculator from "./DistanceCalculator";
 import MapControls from "./MapControls";
+import { logger } from '../../utils/logger';
 
 // Agregar estos iconos después de los imports
 const createLocalidadIcon = () => {
@@ -263,7 +264,7 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
   const [estacionesBlancas, setEstacionesBlancas] = useState<any[]>([]);
 
   // En el Map, al principio del componente (después de los useState)
-  console.log('📊 MAP RENDER - Filtros recibidos:', {
+  logger.log('📊 MAP RENDER - Filtros recibidos:', {
     filterDepartamento,
     filterEstacionTipo,
     ypfCount: ypfStations.length,
@@ -274,10 +275,10 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
 
   // Agregar este useEffect al principio del componente Map (con los otros useEffect)
     useEffect(() => {
-      console.log('🔍 filterDepartamento:', filterDepartamento);
-      console.log('🔍 filterEstacionTipo:', filterEstacionTipo);
-      console.log('🔍 YPF con depto:', ypfStations.map(s => ({ nombre: s.nombre, depto: s.departamento })));
-      console.log('🔍 Blancas con depto:', estacionesBlancas.map(s => ({ nombre: s.nombre, depto: s.departamento })));
+      logger.log('🔍 filterDepartamento:', filterDepartamento);
+      logger.log('🔍 filterEstacionTipo:', filterEstacionTipo);
+      logger.log('🔍 YPF con depto:', ypfStations.map(s => ({ nombre: s.nombre, depto: s.departamento })));
+      logger.log('🔍 Blancas con depto:', estacionesBlancas.map(s => ({ nombre: s.nombre, depto: s.departamento })));
     }, [filterDepartamento, filterEstacionTipo, ypfStations, estacionesBlancas]);
 
 
@@ -289,7 +290,7 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
     ]).then(([localidadesData, ypfData]) => {
       setLocalidades(localidadesData);
       setYpfStations(ypfData);
-    }).catch(err => console.error('Error loading data:', err));
+    }).catch(err => logger.error('Error loading data:', err));
   }, []);
 
 
@@ -314,7 +315,7 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
         }, 100);
       })
       .catch(err => {
-        console.error('Error loading regions:', err);
+        logger.error('Error loading regions:', err);
         setLoading(false);
       });
   }, []);
@@ -326,7 +327,7 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
       .then(data => {
         setDepartments(data.features);
       })
-      .catch(err => console.error('Error loading departments:', err));
+      .catch(err => logger.error('Error loading departments:', err));
   }, []);
 
   // Cargar ciudades
@@ -336,7 +337,7 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
       .then(data => {
         setCities(data.features);
       })
-      .catch(err => console.error('Error loading cities:', err));
+      .catch(err => logger.error('Error loading cities:', err));
   }, []);
 
   // Reemplaza este useEffect en tu Map.tsx
@@ -349,11 +350,11 @@ useEffect(() => {
       return res.json();
     })
     .then(data => {
-      console.log('Estaciones blancas cargadas:', data.length);
+      logger.log('Estaciones blancas cargadas:', data.length);
       setEstacionesBlancas(data);
     })
     .catch(err => {
-      console.warn('Error cargando estaciones blancas:', err);
+      logger.warn('Error cargando estaciones blancas:', err);
       setEstacionesBlancas([]); // 👈 Importante: no romper la página
     });
 }, []);
@@ -411,10 +412,10 @@ useEffect(() => {
         map[d.name] = d;
       });
       setDepartamentosDatos(map);
-      console.log('✅ Datos departamentos cargados:', Object.keys(map).length);
+      logger.log('✅ Datos departamentos cargados:', Object.keys(map).length);
     })
     .catch(err => {
-      console.warn('Error cargando departamentos:', err);
+      logger.warn('Error cargando departamentos:', err);
     });
 }, []);
 
@@ -598,7 +599,7 @@ useEffect(() => {
         name,
       };
       setTempPoints([...tempPoints, newPoint]);
-      console.log('✅ Punto agregado:', newPoint);
+      logger.log('✅ Punto agregado:', newPoint);
       
       if (currentMarker) {
         currentMarker.remove();
@@ -653,10 +654,10 @@ useEffect(() => {
         map[d.name] = d;
       });
       setDepartamentosDatos(map);
-      console.log('✅ Datos departamentos cargados:', Object.keys(map).length);
+      logger.log('✅ Datos departamentos cargados:', Object.keys(map).length);
     })
     .catch(err => {
-      console.warn('Error cargando departamentos:', err);
+      logger.warn('Error cargando departamentos:', err);
     });
 }, []);
 
@@ -668,7 +669,7 @@ const handleAddPoint = (point: { lat: number; lng: number; name: string }) => {
     name: point.name,
   };
   setTempPoints([...tempPoints, newPoint]);
-  console.log('✅ Punto agregado:', newPoint);
+  logger.log('✅ Punto agregado:', newPoint);
   setIsAddingPoint(false);
 };
 

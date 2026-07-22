@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
+import { logger } from '../../utils/logger';
 
 interface GeoLayerProps {
   url: string;
@@ -15,22 +16,22 @@ export default function GeoLayer({ url, visible, style, onEachFeature }: GeoLaye
 
   useEffect(() => {
     if (!map) {
-      console.log('GeoLayer: map not ready');
+      logger.log('GeoLayer: map not ready');
       return;
     }
 
     const loadLayer = async () => {
       try {
-        console.log(`GeoLayer: loading ${url}`);
+        logger.log(`GeoLayer: loading ${url}`);
         const response = await fetch(url);
         
         if (!response.ok) {
-          console.error(`GeoLayer: failed to load ${url} - status ${response.status}`);
+          logger.error(`GeoLayer: failed to load ${url} - status ${response.status}`);
           return;
         }
         
         const data = await response.json();
-        console.log(`GeoLayer: loaded ${url}`, data);
+        logger.log(`GeoLayer: loaded ${url}`, data);
         
         // Limpiar capa anterior
         if (layerRef.current) {
@@ -38,14 +39,14 @@ export default function GeoLayer({ url, visible, style, onEachFeature }: GeoLaye
         }
 
         if (visible && data && data.features) {
-          console.log(`GeoLayer: adding layer with ${data.features.length} features`);
+          logger.log(`GeoLayer: adding layer with ${data.features.length} features`);
           layerRef.current = L.geoJSON(data, {
             style: style || defaultStyle,
             onEachFeature: onEachFeature,
           }).addTo(map);
         }
       } catch (error) {
-        console.error(`GeoLayer: error loading ${url}:`, error);
+        logger.error(`GeoLayer: error loading ${url}:`, error);
       }
     };
 

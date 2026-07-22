@@ -1,0 +1,388 @@
+{
+  "regiones": [
+    {
+      "nombre": "Regional 1",
+      "consorcios": [
+        "CC 103 Deán Funes",
+        "CC 113 Los Pozos",
+        "CC 165 Candelaria",
+        "CC 169 Tuclame-Iglesia Vieja",
+        "CC 174 Serrezuela",
+        "CC 177 Punilla Norte",
+        "CC 196 Media Naranja",
+        "CC 367 San Marcos Sierras",
+        "CC 390 San José Mallín",
+        "CC 411 Mariano Moreno",
+        "CC 415 Tosno"
+      ]
+    },
+    {
+      "nombre": "Regional 2",
+      "consorcios": [
+        "CC74 Conlara",
+        "CC 151 Alto Grande",
+        "CC 214 El Huaico",
+        "CC 227 San Lorenzo",
+        "CC 252 Las Calles",
+        "CC 279 San Vicente",
+        "CC 281 San Javier",
+        "CC 305 La Ramada",
+        "CC 330 Chancaní",
+        "CC 379 San Carlos Minas",
+        "CC 385 Los Cerrillos",
+        "CC 417 Pampa de Achala",
+        "CC 419 Camino Real (Los Hornillos)",
+        "CC 421 Tala Cañada"
+      ]
+    },
+    {
+      "nombre": "Regional 3",
+      "consorcios": [
+        "CC 208 San Francisco del Chañar",
+        "CC 249La Totorilla",
+        "CC 291 El Guanaco",
+        "CC 363 Santa Elena",
+        "CC 364 Las Peñas",
+        "CC 370 Villa Tulumba",
+        "CC 372 San José de la Dormida",
+        "CC 384 Las Arrias",
+        "CC 393 Villa de Maria de Rio Seco",
+        "CC 408 La Rinconada",
+        "CC 413 Gutemberg",
+        "CC 414 Puesto de Castro"
+      ]
+    },
+    {
+      "nombre": "Regional 4",
+      "consorcios": [
+        "CC 33 Cañada de Río Pinto",
+        "CC 35 Monte Cristo",
+        "CC 84 Colonia Caroya",
+        "CC 186 Capilla de Siton - La Posta",
+        "CC 200 La Granja",
+        "CC 201 El Quebrachal",
+        "CC 211 Los Cometierra",
+        "CC 229 General Paz",
+        "CC 239 Tres Esquinas",
+        "CC 261 Candelaria",
+        "CC 298 Colonia Tirolesa",
+        "CC 314 Piquillin"
+      ]
+    },
+    {
+      "nombre": "Regional 5",
+      "consorcios": [
+        "CC 21 Capilla del Carmen",
+        "CC 42 Villa del Rosario",
+        "CC 73 Río Segundo",
+        "CC 88 Matorrales",
+        "CC 90 Pilar",
+        "CC 95 Luque",
+        "CC 100 Laguna Larga",
+        "CC 101 Calchin",
+        "CC 171 La Carbonada",
+        "CC 182 Colonia Impira",
+        "CC 224 Despeñaderos",
+        "CC 232 Monte Ralo",
+        "CC 378 12 de octubre",
+        "CC 398 Potrero de Garay",
+        "CC 399 Tres Lomas",
+        "CC 409 Falda del Carmen"
+      ]
+    },
+    {
+      "nombre": "Regional 6",
+      "consorcios": [
+        "CC 25 La Para",
+        "CC 48 Rio Primero",
+        "CC 50 Plaza Mercedes",
+        "CC 207 La Puerta",
+        "CC 219 Villa Fontana",
+        "CC 243 Diego de Rojas",
+        "CC 251 Cuatro Esquinas",
+        "CC 317 Colonia El Fortín",
+        "CC 321 Obispo Trejo",
+        "CC 322 La Quinta",
+        "CC 327 Las Gramillas",
+        "CC 331 Colonia La Argentina",
+        "CC 351 Santa Rosa de Rio l",
+        "CC 371 Las Saladas",
+        "CC 376 Sanavirones",
+        "CC 388 Sagrada Familia",
+        "CC 392 Los Chañaritos",
+        "CC 406 Comechingones",
+        "CC 420 El Crispin"
+      ]
+    },
+    {
+      "nombre": "Regional 7",
+      "consorcios": [
+        "CC 7 La Francia",
+        "CC 16 El Tío",
+        "CC 18 Marull",
+        "CC 22 Tránsito",
+        "CC 26 Villa Concepción del Tio",
+        "CC 30 Miramar",
+        "CC 39 La Tordilla",
+        "CC 102 La Pobladora",
+        "CC 109 Las Pichanas",
+        "CC 125 Balnearia",
+        "CC 144 Arroyito",
+        "CC 153 Colonia San Bartolomé",
+        "CC 185 Vacas Blancas",
+        "CC 257 Trincheras",
+        "CC 285 Villa Guglieri"
+      ]
+    },
+    {
+      "nombre": "Regional 8",
+      "consorcios": [
+        "CC 10 La Paquita",
+        "CC 12 Altos de Chipión",
+        "CC 19 Brinkmann",
+        "CC 66 Colonia Vignaud",
+        "CC 82 Porteña",
+        "CC 104 Freyre",
+        "CC 119 Morteros",
+        "CC 140 Seeber",
+        "CC 258 Colonia Valtelina",
+        "CC 293 Colonia Anita",
+        "CC 344 Colonia Dos Hermanos",
+        "CC 345 Colonia Beiró",
+        "CC 346 Colonia Maunier",
+        "CC 347 Colonia Milesi",
+        "CC 396 Colonia 10 de Julio"
+      ]
+    },
+    {
+      "nombre": "Regional 9",
+      "consorcios": [
+        "CC 13 Devoto",
+        "CC 15 Alicia",
+        "CC 17 El Fortin",
+        "CC 20 Colonia Prosperidad",
+        "CC 36 Las Varas",
+        "CC 58 Saturnino María Laspiur",
+        "CC 76 Colonia Marina",
+        "CC 98 Las Varillas",
+        "CC 105 Sacanta",
+        "CC 111 El Arañado",
+        "CC 161 Quebracho Herrado",
+        "CC 255 Villa San Esteban",
+        "CC 265 Plaza Luxardo",
+        "CC 292 Plaza San Francisco",
+        "CC 299 Colonia Iturraspe"
+      ]
+    },
+    {
+      "nombre": "Regional 10",
+      "consorcios": [
+        "CC 4 Oliva",
+        "CC 53 Oncativo",
+        "CC 75 Las Junturas",
+        "CC 79 Colazo",
+        "CC 87 Pozo Del Molle",
+        "CC 106 La Playosa",
+        "CC 172 Arroyo Algodón",
+        "CC 194 Carrilobo",
+        "CC 202 James Craik",
+        "CC 203 Colonia Cocha",
+        "CC 222 Manfredi",
+        "CC 226 Colonia Videla",
+        "CC 230 Colonia Almada",
+        "CC 244 Corral del Bajo",
+        "CC 277 Villa Ascasubi",
+        "CC 303 Los Zorros",
+        "CC 350 Calchín Oeste"
+      ]
+    },
+    {
+      "nombre": "Regional 11",
+      "consorcios": [
+        "CC 2 Silvio Péllico",
+        "CC 28 Chilibroste",
+        "CC 31 Ordoñez",
+        "CC 37 Idiazabal",
+        "CC 40 Colonia 25 de Mayo",
+        "CC 46 Ballesteros",
+        "CC 49 Ana Zumarán",
+        "CC 55 Morrison",
+        "CC 65 Cintra",
+        "CC 116 Justiniano Posse",
+        "CC 130 Ausonia",
+        "CC 134 San Antonio De Litín",
+        "CC 135 Bell Ville",
+        "CC 149 Alto Alegre",
+        "CC 159 La Herradura",
+        "CC 295 Los Ucles",
+        "CC 336 Cuatro Caminos",
+        "CC 391 Monte Leña"
+      ]
+    },
+    {
+      "nombre": "Regional 12",
+      "consorcios": [
+        "CC 1 Alejandro",
+        "CC 3 Los Cisnes",
+        "CC 14 La Laguna",
+        "CC 44 Etruria",
+        "CC 60 Pasco",
+        "CC 64 Carnerillo",
+        "CC 72 General Cabrera",
+        "CC 183 Olaeta",
+        "CC 188 Ucacha",
+        "CC 189 Chazón",
+        "CC 215 Charras",
+        "CC 228 Santa Eufemia",
+        "CC 234 Las Acequias",
+        "CC 307 Bengolea",
+        "CC 377 La Carlota"
+      ]
+    },
+    {
+      "nombre": "Regional 13",
+      "consorcios": [
+        "CC 24 Los Cóndores",
+        "CC 51 Elena",
+        "CC 61 Alcira Gigena",
+        "CC 78 Rio Tercero",
+        "CC 92 Corralito",
+        "CC 108 Almafuerte",
+        "CC 152 Alpa Corral",
+        "CC 181 Sierras Grande - Lutti",
+        "CC 192 Las Caleras",
+        "CC 256 San Agustín",
+        "CC 294 Las Peñas Sud",
+        "CC 308 Berrotarán",
+        "CC 405 La Cumbrecita",
+        "CC 412 Cerro Colorado"
+      ]
+    },
+    {
+      "nombre": "Regional 14",
+      "consorcios": [
+        "CC 23 Tancacha",
+        "CC 32 Arroyo Cabral",
+        "CC 69 General Deheza",
+        "CC 83 Hernando",
+        "CC 86 Las Perdices",
+        "CC 94 Dalmacio Vélez",
+        "CC 107 Ticino",
+        "CC 124 Paraje Santa Rosa",
+        "CC 148 Villa Nueva",
+        "CC 167 Gral. Fotheringham",
+        "CC 175 La Palestina",
+        "CC 187 San Antonio de Yucat",
+        "CC 236 Punta Del Agua",
+        "CC 275 Luca",
+        "CC 297 Pampayasta Norte",
+        "CC 302 Tio Pujio",
+        "CC 323 Las Isletillas"
+      ]
+    },
+    {
+      "nombre": "Regional 15",
+      "consorcios": [
+        "CC 52 Suco",
+        "CC 54 Holmberg",
+        "CC 71 Chajan",
+        "CC 146 Sampacho",
+        "CC 158 Achiras",
+        "CC 160 Coronel Baigorria",
+        "CC 217 Coronel Bulnes",
+        "CC 231 San Basilio",
+        "CC 280 Cremeria La Moderna",
+        "CC 315 Espinillo",
+        "CC 332 Chucul",
+        "CC 337 Las Vertientes",
+        "CC 359 Las Cortaderas",
+        "CC 383 Colonia Unidas de Moldes",
+        "CC 397 Villa El Chacay",
+        "CC 418 La Carolina El Potosi",
+        "CC 422 Cuatro Vientos"
+      ]
+    },
+    {
+      "nombre": "Regional 16",
+      "consorcios": [
+        "CC 70 Washington",
+        "CC 126 General Levalle",
+        "CC 129 La Cautiva",
+        "CC 131 Colonia La Providencia",
+        "CC 143 Pacheco de Melo",
+        "CC 155 Curapaligüe",
+        "CC 164 Adelia María",
+        "CC 173 Rio Bamba",
+        "CC 179 Guardia Vieja",
+        "CC 191 Vicuña Mackenna",
+        "CC 199 Tres Colonias",
+        "CC 218 Rosales",
+        "CC 248 Huanchilla",
+        "CC 250 Tosquitas",
+        "CC 273 Villa Rossi",
+        "CC 386 General Soler",
+        "CC 395 Colonia La Carmencita",
+        "CC 416 Villa Sarmiento"
+      ]
+    },
+    {
+      "nombre": "Regional 17",
+      "consorcios": [
+        "CC 85 Huinca Renanco",
+        "CC 114 Villa Valeria",
+        "CC 118 Buchardo",
+        "CC 121 Villa Huidobro",
+        "CC 138 Jovita",
+        "CC 145 Italó",
+        "CC 147 Onagoity",
+        "CC 176 Serrano",
+        "CC 259 Del Campillo",
+        "CC 271 Melo",
+        "CC 353 Colonia El Arbol",
+        "CC 374 Mattaldi",
+        "CC 404 Pincen-Ranqueles"
+      ]
+    },
+    {
+      "nombre": "Regional 18",
+      "consorcios": [
+        "CC 8 Guatimozin",
+        "CC 29 Colonia Italiana",
+        "CC 34 Canals",
+        "CC 59 Alejo Ledesma",
+        "CC 67 Laborde",
+        "CC 68 Arias",
+        "CC 93 Pueblo Italiano",
+        "CC 117 Pascanas",
+        "CC 123 Monte Maíz",
+        "CC 136 Wenceslao Escalante",
+        "CC 141 Isla Verde",
+        "CC 154 Viamonte",
+        "CC 190 Benjamin Gould",
+        "CC 233 La Cesira",
+        "CC 240 Corral De Bustos",
+        "CC 245 Colonia Bismark",
+        "CC 318 Cavanagh",
+        "CC 326 Colonia Bremen",
+        "CC 340 Dos Colonias"
+      ]
+    },
+    {
+      "nombre": "Regional 19",
+      "consorcios": [
+        "CC 5 General Roca",
+        "CC 6 Los Surgentes",
+        "CC 9 Camilo Aldao",
+        "CC 11 General Baldissera",
+        "CC 27 Leones",
+        "CC 47 Inriville",
+        "CC 56 Cruz Alta",
+        "CC 77 Saira",
+        "CC 110 Marcos Juárez",
+        "CC 120 Monte Buey",
+        "CC 132 Noetinger",
+        "CC 269 San Marcos Sud"
+      ]
+    }
+  ]
+}

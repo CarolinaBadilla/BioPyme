@@ -182,7 +182,7 @@ model YpfStation {
   @@map("ypf_stations")
 }
 
-model EstacionBlanca {
+model EstacionBlanca {   // 👈 Con mayúscula y singular
   id          Int     @id @default(autoincrement())
   nombre      String
   direccion   String
@@ -194,7 +194,7 @@ model EstacionBlanca {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@map("estaciones_blancas")
+  @@map("estaciones_blancas")  // 👈 Nombre de la tabla en la BD
 }
 
 model Request {

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { User } from '../types';
 
 // Definir el tipo específico para el rol
-export type UserRole = 'ADMIN' | 'ASSISTANT' | 'ORGANIZATION_MANAGER';
+export type UserRole = 'ADMIN' | 'ASSISTANT' | 'ORGANIZATION_MANAGER' | 'EDITOR';
 
 export interface AuthUser {
   id: number;

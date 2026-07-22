@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { companiesService } from '../services/companies.service';
 import type { Company } from '../types';
+import { logger } from '../utils/logger';
 
 export function useCompanies() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -11,11 +12,11 @@ export function useCompanies() {
   setLoading(true);
   try {
     const data = await companiesService.getMapCompanies();
-    console.log('Datos recibidos del backend:', data);  // 👈 Verificar
+    logger.log('Datos recibidos del backend:', data);  // 👈 Verificar
     setCompanies(data);
     setError(null);
   } catch (err) {
-    console.error('Error fetching companies:', err);
+    logger.error('Error fetching companies:', err);
     setError('Error al cargar las empresas');
   } finally {
     setLoading(false);
@@ -28,7 +29,7 @@ export function useCompanies() {
       setCompanies(prev => prev.map(c => c.id === id ? updated : c));
       return updated;
     } catch (err) {
-      console.error('Error updating company:', err);
+      logger.error('Error updating company:', err);
       throw err;
     }
   };

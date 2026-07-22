@@ -9,6 +9,7 @@ import { useFiltersStore } from '../../store/useFiltersStore';
 import { useCompanyStore } from '../../store/useCompanyStore';
 import type { Company } from '../../types';
 import logo from '../../assets/logo.png';
+import { logger } from '../../utils/logger';
 
 export default function Dashboard() {
   const { companies, loading, updateCompany } = useCompanies();
@@ -18,10 +19,27 @@ export default function Dashboard() {
   const [showDisclaimer, setShowDisclaimer] = useState(true);
   const [filterDepartamento, setFilterDepartamento] = useState<string>("todos");
   const [filterEstacionTipo, setFilterEstacionTipo] = useState<string>("todos");
+  const [ypfStations, setYpfStations] = useState<any[]>([]);
+  const [estacionesBlancas, setEstacionesBlancas] = useState<any[]>([]);
   const [mapKey, setMapKey] = useState(0);
 
+  // Cargar datos de YPF y banderas blancas
   useEffect(() => {
-    console.log('🔄 Filtro cambiado - Depto:', filterDepartamento, 'Tipo:', filterEstacionTipo);
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+    
+    Promise.all([
+      fetch(`${API_URL}/ypf`).then(res => res.json()),
+      fetch(`${API_URL}/estaciones-blancas`).then(res => res.json()),
+    ]).then(([ypfData, blancasData]) => {
+      setYpfStations(ypfData);
+      setEstacionesBlancas(blancasData);
+      logger.log('✅ YPF cargadas en Dashboard:', ypfData.length);
+      logger.log('✅ Blancas cargadas en Dashboard:', blancasData.length);
+    }).catch(err => logger.error('Error loading estaciones:', err));
+  }, []);
+
+  useEffect(() => {
+    logger.log('🔄 Filtro cambiado - Depto:', filterDepartamento, 'Tipo:', filterEstacionTipo);
   }, [filterDepartamento, filterEstacionTipo]);
   
   const [layers, setLayers] = useState({
@@ -128,6 +146,8 @@ export default function Dashboard() {
           filterEstacionTipo={filterEstacionTipo}
           setFilterEstacionTipo={setFilterEstacionTipo}
           onFilterChange={handleFilterChange}
+          ypfStations={ypfStations}
+          estacionesBlancas={estacionesBlancas}
         />
 
         <div className="flex-1 flex flex-col p-4">

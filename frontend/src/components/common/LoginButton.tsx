@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom'; // 👈 Importar
+
 
 export default function LoginButton() {
   const [showModal, setShowModal] = useState(false);
@@ -10,6 +12,8 @@ export default function LoginButton() {
   const [cuit, setCuit] = useState('');
   const [address, setAddress] = useState('');
   const { user, login, register, logout, loading } = useAuth();
+  const navigate = useNavigate(); // 👈 Hook de navegación
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,12 +25,20 @@ export default function LoginButton() {
       if (user) setShowModal(false);
     }
   };
+  const handleAdminClick = () => {
+    navigate('/admin'); // 👈 Usar navigate en lugar de <a>
+  };
 
   if (user) {
     return (
       <div className="flex items-center gap-3">
         <span className="text-sm text-emerald-100">👤 {user.email.split('@')[0]}</span>
-        {user.role === 'ADMIN' && <a href="/admin" className="text-emerald-200 hover:text-white text-sm">Admin</a>}
+        {user.role === 'ADMIN' && <button 
+            onClick={handleAdminClick} // 👈 Cambiar a onClick
+            className="text-emerald-200 hover:text-white text-sm"
+          >
+            Admin
+          </button>}
         <button onClick={logout} className="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg transition text-sm">Salir</button>
       </div>
     );
