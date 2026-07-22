@@ -8,6 +8,7 @@ import AddPointControl from "./AddPointControl";
 import DistanceCalculator from "./DistanceCalculator";
 import MapControls from "./MapControls";
 import { logger } from '../../utils/logger';
+import api from '../../services/api'; // 👈 Verifica que esta línea exista
 
 // Agregar estos iconos después de los imports
 const createLocalidadIcon = () => {
@@ -282,23 +283,22 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
     }, [filterDepartamento, filterEstacionTipo, ypfStations, estacionesBlancas]);
 
 
-  // Cargar datos
-  useEffect(() => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    console.warn('⚠️ No hay token');
-    return;
-  }
 
+// Cargar datos (público - sin autenticación)
+useEffect(() => {
   Promise.all([
     fetch('https://biopyme-backend.onrender.com/api/localidades').then(res => res.json()),
-    fetch('https://biopyme-backend.onrender.com/api/ypf', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    }).then(res => res.json()),
+    fetch('https://biopyme-backend.onrender.com/api/ypf').then(res => res.json()),
   ]).then(([localidadesData, ypfData]) => {
-    setLocalidades(localidadesData);
+    console.log('📊 YPF cargadas en Map:', ypfData?.length || 0);
+    setLocalidades(localidadesData || []);
     setYpfStations(Array.isArray(ypfData) ? ypfData : []);
-  }).catch(err => console.error('Error loading data:', err));
+    setRegionsReady(true);
+    setLoading(false);
+  }).catch(err => {
+    console.error('Error loading data:', err);
+    setLoading(false);
+  });
 }, []);
 
 

@@ -161,35 +161,12 @@ const getStationsInRadius = async () => {
   }
 
   try {
-    // 👈 OBTENER EL TOKEN DEL localStorage
-    const token = localStorage.getItem('token');
+    console.log('🔄 Cargando estaciones...');
     
-    if (!token) {
-      alert('No estás autenticado. Iniciá sesión nuevamente.');
-      return;
-    }
-
-    console.log('🔄 Cargando estaciones desde la API...');
-    
+    // 👈 USAR FETCH SIN AUTENTICACIÓN
     const [ypfResponse, blancasResponse] = await Promise.all([
-      fetch('https://biopyme-backend.onrender.com/api/ypf', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }).then(res => {
-        if (!res.ok) throw new Error(`Error YPF: ${res.status}`);
-        return res.json();
-      }),
-      fetch('https://biopyme-backend.onrender.com/api/estaciones-blancas', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }).then(res => {
-        if (!res.ok) throw new Error(`Error Blancas: ${res.status}`);
-        return res.json();
-      }),
+      fetch('https://biopyme-backend.onrender.com/api/ypf').then(res => res.json()),
+      fetch('https://biopyme-backend.onrender.com/api/estaciones-blancas').then(res => res.json()),
     ]);
 
     const ypfData = Array.isArray(ypfResponse) ? ypfResponse : [];
@@ -217,6 +194,8 @@ const getStationsInRadius = async () => {
       .filter(s => s.distancia <= radiusKm)
       .sort((a, b) => a.distancia - b.distancia);
 
+    console.log('🎯 Dentro del radio:', filtered.length);
+
     setRadiusStationsData({
       planta: selectedCompany.name,
       radio: radiusKm,
@@ -225,8 +204,8 @@ const getStationsInRadius = async () => {
     });
     setShowRadiusStations(true);
   } catch (error) {
-    console.error('❌ Error cargando estaciones:', error);
-    alert('Error al cargar las estaciones. Revisá la consola para más detalles.');
+    console.error('❌ Error:', error);
+    alert('Error al cargar las estaciones. Revisá la consola.');
   }
 };
 
