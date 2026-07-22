@@ -5,7 +5,6 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 
 @Controller('estaciones-blancas')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class EstacionesBlancasController {
   constructor(private estacionesBlancasService: EstacionesBlancasService) {}
 
@@ -20,6 +19,7 @@ export class EstacionesBlancasController {
   }
 
   @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'EDITOR', 'ASSISTANT')
   async update(
     @Param('id') id: string,

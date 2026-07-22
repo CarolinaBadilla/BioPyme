@@ -5,7 +5,6 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 
 @Controller('ypf')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class YpfController {
   constructor(private ypfService: YpfService) {}
 
@@ -20,6 +19,7 @@ export class YpfController {
   }
 
   @Put(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 'EDITOR', 'ASSISTANT')
   async update(
     @Param('id') id: string,
