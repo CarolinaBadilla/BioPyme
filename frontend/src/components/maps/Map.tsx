@@ -284,14 +284,22 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
 
   // Cargar datos
   useEffect(() => {
-    Promise.all([
-      fetch('https://biopyme-backend.onrender.com/api/localidades').then(res => res.json()),
-      fetch('https://biopyme-backend.onrender.com/api/ypf').then(res => res.json()),
-    ]).then(([localidadesData, ypfData]) => {
-      setLocalidades(localidadesData);
-      setYpfStations(ypfData);
-    }).catch(err => logger.error('Error loading data:', err));
-  }, []);
+  const token = localStorage.getItem('token');
+  if (!token) {
+    console.warn('⚠️ No hay token');
+    return;
+  }
+
+  Promise.all([
+    fetch('https://biopyme-backend.onrender.com/api/localidades').then(res => res.json()),
+    fetch('https://biopyme-backend.onrender.com/api/ypf', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(res => res.json()),
+  ]).then(([localidadesData, ypfData]) => {
+    setLocalidades(localidadesData);
+    setYpfStations(Array.isArray(ypfData) ? ypfData : []);
+  }).catch(err => console.error('Error loading data:', err));
+}, []);
 
 
   // Cargar regiones
@@ -342,20 +350,22 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
 
   // Reemplaza este useEffect en tu Map.tsx
 useEffect(() => {
-  fetch(`https://biopyme-backend.onrender.com/api/estaciones-blancas`)
-    .then(res => {
-      if (!res.ok) {
-        throw new Error(`Error ${res.status}: ${res.statusText}`);
-      }
-      return res.json();
-    })
+  const token = localStorage.getItem('token');
+  if (!token) {
+    console.warn('⚠️ No hay token');
+    return;
+  }
+
+  fetch('https://biopyme-backend.onrender.com/api/estaciones-blancas', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+    .then(res => res.json())
     .then(data => {
-      logger.log('Estaciones blancas cargadas:', data.length);
-      setEstacionesBlancas(data);
+      setEstacionesBlancas(Array.isArray(data) ? data : []);
     })
     .catch(err => {
-      logger.warn('Error cargando estaciones blancas:', err);
-      setEstacionesBlancas([]); // 👈 Importante: no romper la página
+      console.warn('Error cargando estaciones blancas:', err);
+      setEstacionesBlancas([]);
     });
 }, []);
 
