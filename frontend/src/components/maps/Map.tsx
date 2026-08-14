@@ -130,6 +130,26 @@ const createConsorcioIcon = () => {
   });
 };
 
+const createExtrusoraIcon = () => {
+  return L.divIcon({
+    html: `<div style="
+      background-color: #ea580c;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    ">🏭</div>`,
+    className: "extrusora-marker",
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
+};
+
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -279,6 +299,7 @@ interface MapProps {
     estacionesBlancas: boolean;
     agroservicios: boolean;
     consorciosCamineros: boolean;
+    extrusorasSoja: boolean;
   };
   onToggleLayer: (layer: string) => void;
   filterDepartamento: string;
@@ -303,6 +324,7 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
   const [departamentosDatos, setDepartamentosDatos] = useState<Record<string, any>>({});
   const [agroservicios, setAgroservicios] = useState<any[]>([]);
   const [consorcios, setConsorcios] = useState<any[]>([]);
+  const [extrusoras, setExtrusoras] = useState<any[]>([]);
 
   const [localidades, setLocalidades] = useState<any[]>([]);
   const [ypfStations, setYpfStations] = useState<any[]>([]);
@@ -334,13 +356,15 @@ useEffect(() => {
     fetch('https://biopyme-backend.onrender.com/api/localidades').then(res => res.json()),
     fetch('https://biopyme-backend.onrender.com/api/ypf').then(res => res.json()),
     fetch('https://biopyme-backend.onrender.com/api/agroservicios').then(res => res.json()),
-    fetch('https://biopyme-backend.onrender.com/api/consorcios-camineros').then(res => res.json())
-  ]).then(([localidadesData, ypfData, agroserviciosData, consorciosData]) => {
+    fetch('https://biopyme-backend.onrender.com/api/consorcios-camineros').then(res => res.json()),
+    fetch('https://biopyme-backend.onrender.com/api/extrusoras-soja').then(res => res.json())
+  ]).then(([localidadesData, ypfData, agroserviciosData, consorciosData, extrusorasData]) => {
     console.log('📊 YPF cargadas en Map:', ypfData?.length || 0);
     setLocalidades(localidadesData || []);
     setYpfStations(Array.isArray(ypfData) ? ypfData : []);
     setAgroservicios(Array.isArray(agroserviciosData) ? agroserviciosData : []); 
     setConsorcios(Array.isArray(consorciosData) ? consorciosData : []);
+    setExtrusoras(Array.isArray(extrusorasData) ? extrusorasData : []);
     setRegionsReady(true);
     setLoading(false);
   }).catch(err => {
@@ -923,6 +947,26 @@ const handleDistanceCalculated = (dist: number, p1: any, p2: any) => {
                 </Popup>
               </Marker>
             ))}
+
+            {layers.extrusorasSoja && extrusoras
+              .filter((item: any) => {
+                if (filterDepartamento === "todos") return true;
+                return item.departamento === filterDepartamento || item.localidad === filterDepartamento;
+              })
+              .map((item: any) => (
+                <Marker
+                  key={`extrusora-${item.id}`}
+                  position={[item.latitud, item.longitud]}
+                  icon={createExtrusoraIcon()}
+                >
+                  <Popup>
+                    <div style={{ minWidth: '160px' }}>
+                      <strong style={{ color: '#c2410c', fontSize: '14px' }}>🏭 {item.razonSocial}</strong><br/>
+                      <span style={{ fontSize: '12px' }}>📍 Localidad: {item.localidad}</span>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
 
       {/* 👈 AGREGAR ESTE BLOQUE - Puntos temporales */}
       {tempPoints.map((point) => (

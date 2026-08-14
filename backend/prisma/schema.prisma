@@ -239,3 +239,15 @@ model ConsorcioCaminero {
 
   @@map("consorcios_camineros")
 }
+
+model ExtrusoraSoja {
+  id          Int      @id @default(autoincrement())
+  razonSocial String
+  localidad   String
+  latitud     Float
+  longitud    Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("extrusoras_soja")
+}

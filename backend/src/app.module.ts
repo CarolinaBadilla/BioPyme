@@ -13,6 +13,7 @@ import { EstacionesBlancasModule } from './modules/estaciones-blancas/estaciones
 import { DepartamentosModule } from './modules/departamentos/departamentos.module';
 import { AgroserviciosModule } from './modules/agroservicios/agroservicios.module';
 import { ConsorciosCaminerosModule } from './modules/consorcios-camineros/consorcios-camineros.module';
+import { ExtrusorasSojaModule } from './modules/extrusoras-soja/extrusoras-soja.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ConsorciosCaminerosModule } from './modules/consorcios-camineros/consor
     DepartamentosModule,
     AgroserviciosModule,
     ConsorciosCaminerosModule,
+    ExtrusorasSojaModule,
   ],
 })
 export class AppModule {}
