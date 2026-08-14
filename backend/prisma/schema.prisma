@@ -210,3 +210,18 @@ model Request {
 
   @@map("requests")
 }
+
+model Agroservicio {
+  id           Int      @id @default(autoincrement())
+  nombre       String
+  direccion    String
+  localidad    String
+  latitud      Float
+  longitud     Float
+  tipoNegocio  String   @default("AGROSERVICIO")
+  marca        String   @default("INDIVIDUAL")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("agroservicios")
+}

@@ -90,6 +90,26 @@ const createEstacionBlancaIcon = () => {
   });
 };
 
+const createAgroservicioIcon = () => {
+  return L.divIcon({
+    html: `<div style="
+      background-color: #16a34a;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      border: 2px solid white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    ">🚜</div>`,
+    className: "agroservicio-marker",
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+  });
+};
+
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -237,6 +257,7 @@ interface MapProps {
     localidades: boolean; 
     ypf: boolean;
     estacionesBlancas: boolean;
+    agroservicios: boolean;
   };
   onToggleLayer: (layer: string) => void;
   filterDepartamento: string;
@@ -259,6 +280,7 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
   const [distanceResult, setDistanceResult] = useState<number | null>(null);
   const [tempPoints, setTempPoints] = useState<any[]>([]);
   const [departamentosDatos, setDepartamentosDatos] = useState<Record<string, any>>({});
+  const [agroservicios, setAgroservicios] = useState<any[]>([]);
 
   const [localidades, setLocalidades] = useState<any[]>([]);
   const [ypfStations, setYpfStations] = useState<any[]>([]);
@@ -289,10 +311,12 @@ useEffect(() => {
   Promise.all([
     fetch('https://biopyme-backend.onrender.com/api/localidades').then(res => res.json()),
     fetch('https://biopyme-backend.onrender.com/api/ypf').then(res => res.json()),
-  ]).then(([localidadesData, ypfData]) => {
+    fetch('https://biopyme-backend.onrender.com/api/agroservicios').then(res => res.json()),
+  ]).then(([localidadesData, ypfData, agroserviciosData]) => {
     console.log('📊 YPF cargadas en Map:', ypfData?.length || 0);
     setLocalidades(localidadesData || []);
     setYpfStations(Array.isArray(ypfData) ? ypfData : []);
+    setAgroservicios(Array.isArray(agroserviciosData) ? agroserviciosData : []); 
     setRegionsReady(true);
     setLoading(false);
   }).catch(err => {
@@ -828,6 +852,32 @@ const handleDistanceCalculated = (dist: number, p1: any, p2: any) => {
             </Popup>
           </Marker>
         ))}
+
+        {/* Marcadores de Agroservicios */}
+        {layers.agroservicios && agroservicios
+          .filter((item: any) => {
+            if (filterDepartamento === "todos") return true;
+            return item.departamento === filterDepartamento || item.localidad === filterDepartamento;
+          })
+          .map((item: any) => (
+            <Marker
+              key={`agroservicio-${item.id}`}
+              position={[item.latitud, item.longitud]}
+              icon={createAgroservicioIcon()}
+            >
+              <Popup>
+                <div style={{ minWidth: '180px' }}>
+                  <strong style={{ color: '#16a34a', fontSize: '14px' }}>🚜 {item.nombre}</strong><br/>
+                  <span style={{ fontSize: '12px' }}>📍 {item.direccion} ({item.localidad})</span><br/>
+                  <hr style={{ margin: '6px 0', borderColor: '#e5e7eb' }} />
+                  <div style={{ fontSize: '11px', color: '#374151' }}>
+                    💼 <strong>Tipo:</strong> {item.tipoNegocio}<br/>
+                    🏷️ <strong>Marca/Bandera:</strong> {item.marca || 'NINGUNA'}
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
 
       {/* 👈 AGREGAR ESTE BLOQUE - Puntos temporales */}
       {tempPoints.map((point) => (

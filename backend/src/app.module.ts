@@ -11,6 +11,7 @@ import { YpfModule } from './modules/ypf/ypf.module';
 import { LocalidadesModule } from './modules/localidades/localidades.module';
 import { EstacionesBlancasModule } from './modules/estaciones-blancas/estaciones-blancas.module'; // 👈 AGREGAR
 import { DepartamentosModule } from './modules/departamentos/departamentos.module';
+import { AgroserviciosModule } from './modules/agroservicios/agroservicios.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { DepartamentosModule } from './modules/departamentos/departamentos.modul
     LocalidadesModule,
     EstacionesBlancasModule,
     DepartamentosModule,
+    AgroserviciosModule,
   ],
 })
 export class AppModule {}
