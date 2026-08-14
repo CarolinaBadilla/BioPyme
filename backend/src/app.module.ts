@@ -9,9 +9,10 @@ import { MapModule } from './modules/map/map.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { YpfModule } from './modules/ypf/ypf.module';
 import { LocalidadesModule } from './modules/localidades/localidades.module';
-import { EstacionesBlancasModule } from './modules/estaciones-blancas/estaciones-blancas.module'; // 👈 AGREGAR
+import { EstacionesBlancasModule } from './modules/estaciones-blancas/estaciones-blancas.module'; 
 import { DepartamentosModule } from './modules/departamentos/departamentos.module';
 import { AgroserviciosModule } from './modules/agroservicios/agroservicios.module';
+import { ConsorciosCaminerosModule } from './modules/consorcios-camineros/consorcios-camineros.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AgroserviciosModule } from './modules/agroservicios/agroservicios.modul
     EstacionesBlancasModule,
     DepartamentosModule,
     AgroserviciosModule,
+    ConsorciosCaminerosModule,
   ],
 })
 export class AppModule {}

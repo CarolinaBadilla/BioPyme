@@ -225,3 +225,17 @@ model Agroservicio {
 
   @@map("agroservicios")
 }
+
+model ConsorcioCaminero {
+  id          Int      @id @default(autoincrement())
+  regional    String   // Ej: "Regional 1"
+  codigo      String   // Ej: "CC 103"
+  nombre      String   // Ej: "Deán Funes"
+  localidad   String   // Ej: "Deán Funes"
+  latitud     Float
+  longitud    Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("consorcios_camineros")
+}

@@ -10,6 +10,7 @@ interface LayerControlProps {
     ypf: boolean;
     estacionesBlancas: boolean;
     agroservicios: boolean;
+    consorciosCamineros: boolean;
   };
   onToggle: (layer: string) => void;
 }
@@ -70,6 +71,11 @@ export default function LayerControl({ layers, onToggle }: LayerControlProps) {
         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
           <input type="checkbox" checked={layers.agroservicios} onChange={() => onToggle('agroservicios')} />
           <span>🚜 Agroservicios</span>
+        </label>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <input type="checkbox" checked={layers.consorciosCamineros} onChange={() => onToggle('consorciosCamineros')} />
+          <span>🏗️ Consorcios Camineros</span>
         </label>
       </div>
     </div>

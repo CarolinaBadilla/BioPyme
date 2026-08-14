@@ -110,6 +110,26 @@ const createAgroservicioIcon = () => {
   });
 };
 
+const createConsorcioIcon = () => {
+  return L.divIcon({
+    html: `<div style="
+      background-color: #d97706;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    ">🏗️</div>`,
+    className: "consorcio-marker",
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
+};
+
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -258,6 +278,7 @@ interface MapProps {
     ypf: boolean;
     estacionesBlancas: boolean;
     agroservicios: boolean;
+    consorciosCamineros: boolean;
   };
   onToggleLayer: (layer: string) => void;
   filterDepartamento: string;
@@ -281,6 +302,7 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
   const [tempPoints, setTempPoints] = useState<any[]>([]);
   const [departamentosDatos, setDepartamentosDatos] = useState<Record<string, any>>({});
   const [agroservicios, setAgroservicios] = useState<any[]>([]);
+  const [consorcios, setConsorcios] = useState<any[]>([]);
 
   const [localidades, setLocalidades] = useState<any[]>([]);
   const [ypfStations, setYpfStations] = useState<any[]>([]);
@@ -312,11 +334,13 @@ useEffect(() => {
     fetch('https://biopyme-backend.onrender.com/api/localidades').then(res => res.json()),
     fetch('https://biopyme-backend.onrender.com/api/ypf').then(res => res.json()),
     fetch('https://biopyme-backend.onrender.com/api/agroservicios').then(res => res.json()),
-  ]).then(([localidadesData, ypfData, agroserviciosData]) => {
+    fetch('https://biopyme-backend.onrender.com/api/consorcios-camineros').then(res => res.json())
+  ]).then(([localidadesData, ypfData, agroserviciosData, consorciosData]) => {
     console.log('📊 YPF cargadas en Map:', ypfData?.length || 0);
     setLocalidades(localidadesData || []);
     setYpfStations(Array.isArray(ypfData) ? ypfData : []);
     setAgroservicios(Array.isArray(agroserviciosData) ? agroserviciosData : []); 
+    setConsorcios(Array.isArray(consorciosData) ? consorciosData : []);
     setRegionsReady(true);
     setLoading(false);
   }).catch(err => {
@@ -878,6 +902,27 @@ const handleDistanceCalculated = (dist: number, p1: any, p2: any) => {
               </Popup>
             </Marker>
           ))}
+
+          {layers.consorciosCamineros && consorcios
+            .filter((item: any) => {
+              if (filterDepartamento === "todos") return true;
+              return item.departamento === filterDepartamento || item.localidad === filterDepartamento;
+            })
+            .map((item: any) => (
+              <Marker
+                key={`consorcio-${item.id}`}
+                position={[item.latitud, item.longitud]}
+                icon={createConsorcioIcon()}
+              >
+                <Popup>
+                  <div style={{ minWidth: '160px' }}>
+                    <strong style={{ color: '#b45309', fontSize: '14px' }}>🏗️ {item.codigo} - {item.nombre}</strong><br/>
+                    <span style={{ fontSize: '12px' }}>📍 Localidad: {item.localidad}</span><br/>
+                    <span style={{ fontSize: '11px', color: '#4b5563' }}>🗺️ {item.regional}</span>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
 
       {/* 👈 AGREGAR ESTE BLOQUE - Puntos temporales */}
       {tempPoints.map((point) => (
