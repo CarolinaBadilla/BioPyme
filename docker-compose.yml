@@ -1,27 +1,82 @@
 version: '3.8'
+
+networks:
+  # Red interna privada para la nueva app (Backend <-> Postgres)
+  nueva-app-internal:
+    driver: bridge
+  # Red compartida donde vive nginx-proxy-manager
+  proxy_default:
+    external: true
+
 services:
-  postgres:
-    image: postgres:15
-    container_name: biopyme_db
+  # ----------------------------------------------------
+  # Base de Datos PostgreSQL (Aislada / Sin puertos expuestos)
+  # ----------------------------------------------------
+  postgres_db:
+    image: postgres:16-alpine
+    container_name: nueva_app_postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: biopyme
-    ports:
-      - "6000:5432"
+      POSTGRES_DB: ${DB_NAME:-appdb}
+      POSTGRES_USER: ${DB_USER:-appuser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - nueva-app-internal
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-appuser} -d ${DB_NAME:-appdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: biopyme_pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "5050:80"
+  # ----------------------------------------------------
+  # Backend NestJS
+  # ----------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nueva_app_backend
+    restart: unless-stopped
     depends_on:
-      - postgres
+      postgres_db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://${DB_USER}:${DB_PASSWORD}@postgres_db:5432/${DB_NAME}?schema=public"
+      PORT: 3000
+      NODE_ENV: production
+    env_file:
+      - .env
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=100m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - nueva-app-internal
+
+  # ----------------------------------------------------
+  # Frontend React (Nginx Alpine)
+  # ----------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nueva_app_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - nueva-app-internal
+      - proxy_default  # Permite que Nginx Proxy Manager lo encuentre por nombre
 
 volumes:
   postgres_data:
+    driver: local
