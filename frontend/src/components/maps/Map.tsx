@@ -353,11 +353,11 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
 // Cargar datos (público - sin autenticación)
 useEffect(() => {
   Promise.all([
-    fetch('https://biopyme-backend.onrender.com/api/localidades').then(res => res.json()),
-    fetch('https://biopyme-backend.onrender.com/api/ypf').then(res => res.json()),
-    fetch('https://biopyme-backend.onrender.com/api/agroservicios').then(res => res.json()),
-    fetch('https://biopyme-backend.onrender.com/api/consorcios-camineros').then(res => res.json()),
-    fetch('https://biopyme-backend.onrender.com/api/extrusoras-soja').then(res => res.json())
+    fetch(`${API_URL}/localidades`).then(res => res.json()),
+    fetch(`${API_URL}/ypf`).then(res => res.json()),
+    fetch(`${API_URL}/agroservicios`).then(res => res.json()),
+    fetch(`${API_URL}/consorcios-camineros`).then(res => res.json()),
+    fetch(`${API_URL}/extrusoras-soja`).then(res => res.json())
   ]).then(([localidadesData, ypfData, agroserviciosData, consorciosData, extrusorasData]) => {
     console.log('📊 YPF cargadas en Map:', ypfData?.length || 0);
     setLocalidades(localidadesData || []);
@@ -428,7 +428,7 @@ useEffect(() => {
     return;
   }
 
-  fetch('https://biopyme-backend.onrender.com/api/estaciones-blancas', {
+  fetch(`${API_URL}/estaciones-blancas`, {
     headers: { 'Authorization': `Bearer ${token}` }
   })
     .then(res => res.json())
@@ -482,7 +482,7 @@ useEffect(() => {
 // Cargar datos demográficos de departamentos
 // ============================================
 useEffect(() => {
-  const API_URL = import.meta.env.VITE_API_URL || 'https://biopyme-backend.onrender.com/api';
+  const API_URL = import.meta.env.VITE_API_URL;
   fetch(`${API_URL}/departamentos`)
     .then(res => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -720,11 +720,10 @@ useEffect(() => {
 }, [isAddingPoint, mapRef.current, tempPoints]);
 
 
-
+const API_URL = import.meta.env.VITE_API_URL;
 // Cargar datos demográficos de departamentos
 // ============================================
 useEffect(() => {
-  const API_URL = import.meta.env.VITE_API_URL || 'https://biopyme-backend.onrender.com/api';
   fetch(`${API_URL}/departamentos`)
     .then(res => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
