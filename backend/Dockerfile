@@ -14,6 +14,9 @@ FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
+# INSTALAR LIBRERÍAS DE OPENSSL Y COMPATIBILIDAD EN ALPINE (Crucial para Prisma)
+RUN apk add --no-cache openssl libc6-compat
+
 # Usuario sin privilegios
 RUN addgroup -g 10001 -S appgroup && adduser -u 10001 -S appuser -G appgroup
 
