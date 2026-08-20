@@ -7,7 +7,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-async function main() {
+export async function main() {
   console.log('🌱 Sembrando extrusoras de soja...');
 
   await prisma.extrusoraSoja.deleteMany();

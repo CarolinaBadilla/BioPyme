@@ -40,6 +40,5 @@
     "typescript": "^5.3.0"
   },
   "prisma": {
-    "seed": "./node_modules/.bin/ts-node prisma/seed.ts && ./node_modules/.bin/ts-node prisma/seed-agroservicios.ts && ./node_modules/.bin/ts-node prisma/seed-ypf.ts && ./node_modules/.bin/ts-node prisma/seed-localidades.ts && ./node_modules/.bin/ts-node prisma/seed-consorcios.ts && ./node_modules/.bin/ts-node prisma/seed-extrusoras.ts && ./node_modules/.bin/ts-node prisma/seed-estaciones-blancas.ts"
-  }
+    "seed": "ts-node prisma/seed.ts"}
 }
