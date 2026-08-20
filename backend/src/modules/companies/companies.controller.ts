@@ -13,6 +13,11 @@ export class CompaniesController {
     return this.companiesService.findAll();
   }
 
+  @Get()
+  async findAll() {
+    return this.companiesService.findAll();
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.companiesService.findOne(+id);
