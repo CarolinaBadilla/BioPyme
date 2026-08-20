@@ -50,16 +50,19 @@ export default function AdminPanel() {
       fetchUsers();
     }
     fetchRequests();
-    if (canEditEstaciones) {
-      fetchEstaciones();
-    }
   }, []);
 
-  const fetchEstaciones = async () => {
+  useEffect(() => {
+    if (activeTab === 'estaciones' && canEditEstaciones) {
+      fetchEstaciones(estacionesTipo);
+    }
+  }, [activeTab]);
+
+  const fetchEstaciones = async (tipoTarget: 'ypf' | 'blancas' = estacionesTipo) => {
     setLoadingEstaciones(true);
     setEstacionesError(null);
     try {
-      const endpoint = estacionesTipo === 'ypf' ? 'ypf' : 'estaciones-blancas';
+      const endpoint = tipoTarget === 'ypf' ? 'ypf' : 'estaciones-blancas';
       const response = await api.get(`/${endpoint}`);
       setEstaciones(response.data);
     } catch (err) {
@@ -89,9 +92,10 @@ export default function AdminPanel() {
   };
 
   const handleTipoChange = (tipo: 'ypf' | 'blancas') => {
+    setEstaciones([]); // Limpia el arreglo anterior para no mezclar vistas
     setEstacionesTipo(tipo);
     setEditingEstacion(null);
-    fetchEstaciones();
+    fetchEstaciones(tipo); // Invocación explícita con el valor actualizado
   };
 
   const fetchUsers = async () => {
@@ -325,7 +329,7 @@ export default function AdminPanel() {
                   ⚪ Bandera Blanca
                 </button>
                 <button
-                  onClick={fetchEstaciones}
+                  onClick={() => fetchEstaciones()}
                   className="px-3 py-1.5 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition text-sm"
                 >
                   🔄 Actualizar
@@ -436,7 +440,7 @@ const departamentos: string[] = [...new Set(
           </thead>
           <tbody className="divide-y divide-slate-700">
             {filtered.map((estacion: any) => (
-              <tr key={estacion.id} className="hover:bg-slate-700/50 transition">
+              <tr key={`${tipo}-${estacion.id}`} className="hover:bg-slate-700/50 transition">
                 <td className="px-4 py-3 text-sm font-medium text-white">{estacion.nombre}</td>
                 <td className="px-4 py-3 text-sm text-slate-300">{estacion.direccion}</td>
                 <td className="px-4 py-3 text-sm text-slate-300">{estacion.localidad || '-'}</td>
