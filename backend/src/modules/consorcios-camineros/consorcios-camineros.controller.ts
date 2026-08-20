@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, UseGuards, Delete } from '@nestjs/common';
 import { ConsorciosCaminerosService } from './consorcios-camineros.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -30,5 +30,12 @@ export class ConsorciosCaminerosController {
   @Roles('ADMIN', 'EDITOR', 'ASSISTANT')
   async update(@Param('id') id: string, @Body() updateData: any) {
     return this.consorciosCaminerosService.update(+id, updateData);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'EDITOR')
+  async remove(@Param('id') id: string) {
+    return this.consorciosCaminerosService.remove(+id);
   }
 }

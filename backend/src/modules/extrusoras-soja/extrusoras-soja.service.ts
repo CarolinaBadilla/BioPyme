@@ -30,4 +30,9 @@ export class ExtrusorasSojaService {
       data: { ...data, updatedAt: new Date() },
     });
   }
+
+  async remove(id: number) {
+    await this.findOne(id);
+    return this.prisma.extrusoraSoja.delete({ where: { id } });
+  }
 }

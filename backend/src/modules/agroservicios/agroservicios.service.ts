@@ -34,4 +34,13 @@ export class AgroserviciosService {
       },
     });
   }
+
+  async remove(id: number) {
+    await this.findOne(id);
+    return this.prisma.agroservicio.delete({ where: { id } });
+  }
+
+  async create(data: any) {
+    return this.prisma.agroservicio.create({ data });
+  }
 }

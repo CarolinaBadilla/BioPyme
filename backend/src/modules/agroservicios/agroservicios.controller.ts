@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Body, Param, UseGuards, Post, Delete } from '@nestjs/common';
 import { AgroserviciosService } from './agroservicios.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -26,5 +26,19 @@ export class AgroserviciosController {
     @Body() updateData: any,
   ) {
     return this.agroserviciosService.update(+id, updateData);
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'EDITOR')
+  async create(@Body() data: any) {
+    return this.agroserviciosService.create(data);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'EDITOR')
+  async remove(@Param('id') id: string) {
+    return this.agroserviciosService.remove(+id);
   }
 }

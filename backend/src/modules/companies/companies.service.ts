@@ -44,29 +44,47 @@ export class CompaniesService {
     });
   }
 
-  async getCompanyById(id: number, userId: number, userRole: string, userCompanyId: number | null) {
-    const company = await this.prisma.company.findUnique({ where: { id } });
-    if (!company) throw new NotFoundException('Empresa no encontrada');
+  async findOne(id: number) {
+    const item = await this.prisma.company.findUnique({
+      where: { id },
+    });
 
-    if (userRole !== 'ADMIN' && userRole !== 'ASSISTANT') {
-      if (company.ownerId !== userId) {
-        throw new ForbiddenException('No tienes permiso para ver esta empresa');
-      }
+    if (!item) {
+      throw new NotFoundException(`Registro con ID ${id} no encontrado`);
     }
-    return company;
+
+    return item;
   }
 
-  async updateCompany(id: number, updateData: any, userId: number, userRole: string) {
-    const company = await this.prisma.company.findUnique({ where: { id } });
-    if (!company) throw new NotFoundException('Empresa no encontrada');
+  async create(data: any) {
+    // Eliminamos el id si viene en el body para que Postgres lo autogenere
+    const { id, ...cleanData } = data;
+    return this.prisma.company.create({
+      data: {
+        ...cleanData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    });
+  }
 
-    if (userRole === 'ORGANIZATION_MANAGER' && company.ownerId !== userId) {
-      throw new ForbiddenException('Solo puedes editar tu propia empresa');
-    }
+  async update(id: number, data: any) {
+    await this.findOne(id);
+    const { id: _, ...cleanData } = data;
 
     return this.prisma.company.update({
       where: { id },
-      data: updateData,
+      data: {
+        ...cleanData,
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  async remove(id: number) {
+    await this.findOne(id);
+    return this.prisma.company.delete({
+      where: { id },
     });
   }
 }

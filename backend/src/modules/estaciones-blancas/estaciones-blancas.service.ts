@@ -34,4 +34,21 @@ export class EstacionesBlancasService {
       }
     });
   }
+
+  async create(data: any) {
+    return this.prisma.estacionBlanca.create({
+      data: {
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    });
+  }
+
+  async remove(id: number) {
+    await this.findOne(id);
+    return this.prisma.estacionBlanca.delete({
+      where: { id }
+    });
+  }
 }

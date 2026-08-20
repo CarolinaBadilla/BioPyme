@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, UseGuards, Delete } from '@nestjs/common';
 import { ExtrusorasSojaService } from './extrusoras-soja.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -30,5 +30,12 @@ export class ExtrusorasSojaController {
   @Roles('ADMIN', 'EDITOR', 'ASSISTANT')
   async update(@Param('id') id: string, @Body() updateData: any) {
     return this.extrusorasSojaService.update(+id, updateData);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN', 'EDITOR')
+  async remove(@Param('id') id: string) {
+    return this.extrusorasSojaService.remove(+id);
   }
 }
