@@ -10,7 +10,7 @@ export class CompaniesController {
 
   @Get('map')
   async getForMap() {
-    return this.companiesService.getApprovedCompanies();
+    return this.companiesService.findAll();
   }
 
   @Get(':id')

@@ -44,6 +44,10 @@ export class CompaniesService {
     });
   }
 
+  async findAll() {
+    return this.prisma.company.findMany();
+  }
+
   async findOne(id: number) {
     const item = await this.prisma.company.findUnique({
       where: { id },
