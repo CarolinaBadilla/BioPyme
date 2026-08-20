@@ -1,0 +1,88 @@
+name: DevSecOps CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - feature/vps-deployment
+
+jobs:
+  # ==========================================
+  # STAGE 1: SECURITY & SAST SCANNING
+  # ==========================================
+  security:
+    name: Security Scans (Gitleaks, Semgrep, Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 1. Gitleaks: Detección de credenciales y secretos expuestos
+      - name: Run Gitleaks (Secret Detection)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 2. Semgrep: Análisis estático de seguridad de código fuente (SAST)
+      - name: Run Semgrep
+        run: |
+          python3 -m pip install semgrep
+          semgrep scan --config auto --sarif --output=semgrep.sarif .
+        continue-on-error: true
+
+      - name: Upload Semgrep SARIF Report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+      # 3. Trivy: Escaneo de vulnerabilidades en la imagen de Backend
+      - name: Build Backend Image for Scanning
+        run: docker build -t backend:local ./backend
+
+      - name: Run Trivy Vulnerability Scanner (Backend)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'backend:local'
+          format: 'sarif'
+          output: 'trivy-backend.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy Backend SARIF Report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-backend.sarif
+          category: trivy-backend
+
+  # ==========================================
+  # STAGE 2: SSH DEPLOYMENT TO VPS
+  # ==========================================
+  deploy:
+    name: Deploy to VPS
+    needs: security
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute Remote SSH Commands
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            # 1. Navegar al directorio del proyecto
+            cd /home/debian/biopyme/codigo_fuente
+
+            # 2. Descargar los últimos cambios
+            git fetch origin
+            git checkout ${{ github.ref_name }}
+            git pull origin ${{ github.ref_name }}
+
+            # 3. Reconstruir imágenes y levantar contenedores
+            docker compose build --no-cache
+            docker compose up -d
+
+            # 4. Limpieza de imágenes en desuso para optimizar espacio
+            docker image prune -f
