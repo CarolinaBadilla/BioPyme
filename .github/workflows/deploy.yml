@@ -5,6 +5,13 @@ on:
     branches:
       - main
       - feature/vps-deployment
+  workflow_dispatch:
+
+# PERMISOS REQUERIDOS PARA SUBIR REPORTES SARIF A GITHUB SECURITY
+permissions:
+  contents: read
+  security-events: write
+  actions: read
 
 jobs:
   # ==========================================
@@ -19,13 +26,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 1. Gitleaks: Detección de credenciales y secretos expuestos
+      # 1. Gitleaks: Detección de credenciales
       - name: Run Gitleaks (Secret Detection)
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 2. Semgrep: Análisis estático de seguridad de código fuente (SAST)
+      # 2. Semgrep: Análisis estático (SAST)
       - name: Run Semgrep
         run: |
           python3 -m pip install semgrep
@@ -38,7 +45,7 @@ jobs:
           sarif_file: semgrep.sarif
           category: semgrep
 
-      # 3. Trivy: Escaneo de vulnerabilidades en la imagen de Backend
+      # 3. Trivy: Escaneo de imágenes de contenedores
       - name: Build Backend Image for Scanning
         run: docker build -t backend:local ./backend
 
@@ -72,17 +79,10 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           script: |
-            # 1. Navegar al directorio del proyecto
             cd /home/debian/biopyme/codigo_fuente
-
-            # 2. Descargar los últimos cambios
             git fetch origin
             git checkout ${{ github.ref_name }}
             git pull origin ${{ github.ref_name }}
-
-            # 3. Reconstruir imágenes y levantar contenedores
             docker compose build --no-cache
             docker compose up -d
-
-            # 4. Limpieza de imágenes en desuso para optimizar espacio
             docker image prune -f
