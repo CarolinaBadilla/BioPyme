@@ -7,6 +7,9 @@ import { main as seedLocalidades } from './seed-localidades';
 import { main as seedConsorcios } from './seed-consorcios';
 import { main as seedExtrusoras } from './seed-extrusoras';
 import { main as seedBlancas } from './seed-estaciones-blancas';
+import { main as seedGeneral } from './seed';
+import { main as updateDepartamentos } from './update-departamentos';
+import { main as seedGeo } from './seed-geo';
 
 const prisma = new PrismaClient();
 
@@ -19,6 +22,9 @@ async function main() {
   await seedConsorcios();
   await seedExtrusoras();
   await seedBlancas();
+  await seedGeneral();
+  await updateDepartamentos();
+  await seedGeo();
 
   console.log('🎉 ¡Todos los seeds fueron cargados exitosamente!');
 }
