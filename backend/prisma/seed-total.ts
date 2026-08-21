@@ -10,6 +10,7 @@ import { main as seedBlancas } from './seed-estaciones-blancas';
 import { main as seedGeneral } from './seed';
 import { main as updateDepartamentos } from './update-departamentos';
 import { main as seedGeo } from './seed-geo';
+import { main as seedUsuarios } from './seed-usuarios';
 
 const prisma = new PrismaClient();
 
@@ -25,6 +26,7 @@ async function main() {
   await seedGeneral();
   await updateDepartamentos();
   await seedGeo();
+  await seedUsuarios();
 
   console.log('🎉 ¡Todos los seeds fueron cargados exitosamente!');
 }
