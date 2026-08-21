@@ -357,14 +357,16 @@ useEffect(() => {
     fetch(`${API_URL}/ypf`).then(res => res.json()),
     fetch(`${API_URL}/agroservicios`).then(res => res.json()),
     fetch(`${API_URL}/consorcios-camineros`).then(res => res.json()),
-    fetch(`${API_URL}/extrusoras-soja`).then(res => res.json())
-  ]).then(([localidadesData, ypfData, agroserviciosData, consorciosData, extrusorasData]) => {
+    fetch(`${API_URL}/extrusoras-soja`).then(res => res.json()),
+    fetch(`${API_URL}/estaciones-blancas`).then(res => res.json()) // <--- Agregada aquí
+  ]).then(([localidadesData, ypfData, agroserviciosData, consorciosData, extrusorasData, estacionesBlancasData]) => {
     console.log('📊 YPF cargadas en Map:', ypfData?.length || 0);
     setLocalidades(localidadesData || []);
     setYpfStations(Array.isArray(ypfData) ? ypfData : []);
     setAgroservicios(Array.isArray(agroserviciosData) ? agroserviciosData : []); 
     setConsorcios(Array.isArray(consorciosData) ? consorciosData : []);
     setExtrusoras(Array.isArray(extrusorasData) ? extrusorasData : []);
+    setEstacionesBlancas(Array.isArray(estacionesBlancasData) ? estacionesBlancasData : []); // <--- Asignación del estado
     setRegionsReady(true);
     setLoading(false);
   }).catch(err => {
@@ -420,25 +422,6 @@ useEffect(() => {
       .catch(err => logger.error('Error loading cities:', err));
   }, []);
 
-  // Reemplaza este useEffect en tu Map.tsx
-useEffect(() => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    console.warn('⚠️ No hay token');
-    return;
-  }
-
-  fetch(`${API_URL}/estaciones-blancas`, {
-  })
-    .then(res => res.json())
-    .then(data => {
-      setEstacionesBlancas(Array.isArray(data) ? data : []);
-    })
-    .catch(err => {
-      console.warn('Error cargando estaciones blancas:', err);
-      setEstacionesBlancas([]);
-    });
-}, []);
 
   // Manejar capa de polígonos de regiones (con control de interacción)
     useEffect(() => {
