@@ -429,7 +429,6 @@ useEffect(() => {
   }
 
   fetch(`${API_URL}/estaciones-blancas`, {
-    headers: { 'Authorization': `Bearer ${token}` }
   })
     .then(res => res.json())
     .then(data => {
