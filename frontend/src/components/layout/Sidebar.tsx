@@ -165,8 +165,8 @@ const getStationsInRadius = async () => {
     
     // 👈 USAR FETCH SIN AUTENTICACIÓN
     const [ypfResponse, blancasResponse] = await Promise.all([
-      fetch('https://biopyme-backend.onrender.com/api/ypf').then(res => res.json()),
-      fetch('https://biopyme-backend.onrender.com/api/estaciones-blancas').then(res => res.json()),
+      fetch('https://biopyme.teleios-studio.com.ar/api/ypf').then(res => res.json()),
+      fetch('https://biopyme.teleios-studio.com.ar/api/estaciones-blancas').then(res => res.json()),
     ]);
 
     const ypfData = Array.isArray(ypfResponse) ? ypfResponse : [];
