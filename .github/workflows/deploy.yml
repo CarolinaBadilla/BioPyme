@@ -1,3 +1,18 @@
+# name: DevSecOps CI/CD Pipeline
+
+# on:
+#   push:
+#     branches:
+#       - main
+#       - feature/vps-deployment
+#   workflow_dispatch:
+
+# # PERMISOS REQUERIDOS PARA SUBIR REPORTES SARIF A GITHUB SECURITY
+# permissions:
+#   contents: read
+#   security-events: write
+#   actions: read
+
 name: DevSecOps CI/CD Pipeline
 
 on:
@@ -7,7 +22,7 @@ on:
       - feature/vps-deployment
   workflow_dispatch:
 
-# PERMISOS REQUERIDOS PARA SUBIR REPORTES SARIF A GITHUB SECURITY
+# PERMISOS REQUERIDOS
 permissions:
   contents: read
   security-events: write
