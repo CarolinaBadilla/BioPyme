@@ -42,6 +42,8 @@ export default function AdminPanel() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  const [searchTerm, setSearchTerm] = useState('');
+
   const canManageUsers = user?.role === 'ADMIN';
   const canEditMap = user?.role === 'ADMIN' || user?.role === 'EDITOR' || user?.role === 'ASSISTANT';
 
@@ -60,6 +62,11 @@ export default function AdminPanel() {
       console.error(e);
     }
   };
+
+  const filteredFeatures = features.filter(f => 
+    f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    f.properties?.localidad?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const fetchRequests = async () => {
     try {
@@ -346,7 +353,7 @@ export default function AdminPanel() {
           </div>
         )}
 
-        {/* PESTAÑA: CAPAS DEL MAPA (DINÁMICAS) */}
+       {/* PESTAÑA: CAPAS DEL MAPA (DINÁMICAS) */}
         {activeTab === 'mapa' && (
           <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-4">
             <div className="flex justify-between items-center flex-wrap gap-4">
@@ -379,6 +386,23 @@ export default function AdminPanel() {
                 </button>
               )}
             </div>
+
+            {/* 👇 ¡ACÁ ES DÓNDE AGREGAMOS EL CONTADOR Y EL BUSCADOR! 👇 */}
+            {selectedCategory && !isCreatingFeature && !editingFeature && !isCreatingCategory && (
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4 border-t border-slate-700">
+                <div className="text-sm font-semibold text-slate-300">
+                  📊 Total en esta categoría: <span className="text-indigo-400 font-bold">{features.length}</span> ubicaciones
+                </div>
+                <input
+                  type="text"
+                  placeholder="🔍 Buscar por nombre o localidad..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="p-2 bg-slate-700 border border-slate-600 rounded-xl text-sm text-white w-full md:w-72"
+                />
+              </div>
+            )}
+
 
             {/* Formulario para crear NUEVA CATEGORÍA de mapa */}
             {isCreatingCategory && (
@@ -482,25 +506,33 @@ function DynamicFeatureForm({ initialData, isCreating, onSave, onCancel }: any) 
     ...initialData
   });
 
-  // Convertimos el objeto properties existente en un array de pares [{key, value}] para manipularlo fácil
+  // Campos base fijos guardados dentro de properties
+  const [baseProps, setBaseProps] = useState({
+    direccion: initialData.properties?.direccion || '',
+    localidad: initialData.properties?.localidad || '',
+    departamento: initialData.properties?.departamento || '',
+  });
+
+  // Filtramos los campos base para quedarnos solo con los "extras" personalizados en el array dinámico
   const initialProperties = initialData.properties || {};
+  const baseKeys = ['direccion', 'localidad', 'departamento'];
+  
   const [customFields, setCustomFields] = useState<Array<{ key: string; value: string }>>(
-    Object.entries(initialProperties).map(([key, value]) => ({ key, value: String(value) }))
+    Object.entries(initialProperties)
+      .filter(([key]) => !baseKeys.includes(key))
+      .map(([key, value]) => ({ key, value: String(value) }))
   );
 
-  // Función para agregar un nuevo campo vacío
   const handleAddCustomField = () => {
     setCustomFields([...customFields, { key: '', value: '' }]);
   };
 
-  // Función para actualizar un campo personalizado
   const handleCustomFieldChange = (index: number, field: 'key' | 'value', val: string) => {
     const updated = [...customFields];
     updated[index][field] = val;
     setCustomFields(updated);
   };
 
-  // Función para eliminar un campo personalizado
   const handleRemoveCustomField = (index: number) => {
     setCustomFields(customFields.filter((_, i) => i !== index));
   };
@@ -508,27 +540,31 @@ function DynamicFeatureForm({ initialData, isCreating, onSave, onCancel }: any) 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Reconstruimos el objeto properties a partir de los campos dinámicos
-    const propertiesObject: Record<string, string> = {};
+    // Consolidamos propiedades base + atributos extras personalizados
+    const finalProperties: Record<string, string> = {
+      ...baseProps,
+    };
+
     customFields.forEach(item => {
       if (item.key.trim()) {
-        propertiesObject[item.key.trim()] = item.value;
+        finalProperties[item.key.trim()] = item.value;
       }
     });
 
     onSave({ 
       ...formData, 
-      properties: propertiesObject 
+      properties: finalProperties 
     });
   };
 
   return (
     <form onSubmit={handleSubmit} className="bg-slate-700 p-6 rounded-xl space-y-4 shadow-xl">
       <h3 className="text-lg font-bold text-white">
-        {isCreating ? '➕ Agregar nuevo punto dinámico' : '✏️ Editar punto dinámico'}
+        {isCreating ? '➕ Agregar nuevo punto' : '✏️ Editar punto'}
       </h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Campos Principales */}
         <div>
           <label className="block text-xs mb-1 text-slate-300">Nombre de la ubicación *</label>
           <input
@@ -540,62 +576,94 @@ function DynamicFeatureForm({ initialData, isCreating, onSave, onCancel }: any) 
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="block text-xs mb-1 text-slate-300">Latitud *</label>
-            <input
-              type="number"
-              step="0.000001"
-              value={formData.latitude}
-              onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
-              className="w-full p-2 bg-slate-600 rounded-lg text-sm text-white"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-xs mb-1 text-slate-300">Longitud *</label>
-            <input
-              type="number"
-              step="0.000001"
-              value={formData.longitude}
-              onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-              className="w-full p-2 bg-slate-600 rounded-lg text-sm text-white"
-              required
-            />
-          </div>
+        <div>
+          <label className="block text-xs mb-1 text-slate-300">Dirección</label>
+          <input
+            type="text"
+            value={baseProps.direccion}
+            onChange={(e) => setBaseProps({ ...baseProps, direccion: e.target.value })}
+            className="w-full p-2 bg-slate-600 rounded-lg text-sm text-white"
+            placeholder="Ej: Av. Argentina 123"
+          />
         </div>
 
-        {/* SECCIÓN DE CAMPOS DINÁMICOS PERSONALIZADOS */}
+        <div>
+          <label className="block text-xs mb-1 text-slate-300">Localidad</label>
+          <input
+            type="text"
+            value={baseProps.localidad}
+            onChange={(e) => setBaseProps({ ...baseProps, localidad: e.target.value })}
+            className="w-full p-2 bg-slate-600 rounded-lg text-sm text-white"
+            placeholder="Ej: Córdoba"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs mb-1 text-slate-300">Departamento</label>
+          <input
+            type="text"
+            value={baseProps.departamento}
+            onChange={(e) => setBaseProps({ ...baseProps, departamento: e.target.value })}
+            className="w-full p-2 bg-slate-600 rounded-lg text-sm text-white"
+            placeholder="Ej: Capital"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs mb-1 text-slate-300">Latitud *</label>
+          <input
+            type="number"
+            step="0.000001"
+            value={formData.latitude}
+            onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
+            className="w-full p-2 bg-slate-600 rounded-lg text-sm text-white"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs mb-1 text-slate-300">Longitud *</label>
+          <input
+            type="number"
+            step="0.000001"
+            value={formData.longitude}
+            onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
+            className="w-full p-2 bg-slate-600 rounded-lg text-sm text-white"
+            required
+          />
+        </div>
+
+        {/* ATRIBUTOS EXTRAS PERSONALIZADOS */}
         <div className="md:col-span-2 bg-slate-800 p-4 rounded-xl border border-slate-600 space-y-3">
           <div className="flex justify-between items-center">
             <label className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
-              📋 Atributos y Datos Personalizados (Opcional)
+              📋 Atributos Extras Opcionales (Teléfono, Código, etc.)
             </label>
             <button
               type="button"
               onClick={handleAddCustomField}
               className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition"
             >
-              + Agregar Atributo
+              + Agregar Atributo Extra
             </button>
           </div>
 
           {customFields.length === 0 ? (
-            <p className="text-xs text-slate-400 italic">No hay atributos adicionales. Hacé clic en "+ Agregar Atributo" para sumar localidad, dirección, teléfono, etc.</p>
+            <p className="text-xs text-slate-400 italic">No hay atributos extras. Hacé clic arriba si necesitás sumar algún dato particular.</p>
           ) : (
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {customFields.map((field, index) => (
                 <div key={index} className="flex gap-2 items-center">
                   <input
                     type="text"
-                    placeholder="Nombre (ej: Localidad)"
+                    placeholder="Nombre (ej: Teléfono)"
                     value={field.key}
                     onChange={(e) => handleCustomFieldChange(index, 'key', e.target.value)}
                     className="w-1/3 p-2 bg-slate-600 rounded-lg text-sm text-white"
                   />
                   <input
                     type="text"
-                    placeholder="Valor (ej: Córdoba)"
+                    placeholder="Valor (ej: 351-...)"
                     value={field.value}
                     onChange={(e) => handleCustomFieldChange(index, 'value', e.target.value)}
                     className="w-2/3 p-2 bg-slate-600 rounded-lg text-sm text-white"
@@ -604,7 +672,7 @@ function DynamicFeatureForm({ initialData, isCreating, onSave, onCancel }: any) 
                     type="button"
                     onClick={() => handleRemoveCustomField(index)}
                     className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs"
-                    title="Eliminar atributo"
+                    title="Eliminar"
                   >
                     🗑️
                   </button>
