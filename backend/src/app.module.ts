@@ -14,6 +14,7 @@ import { DepartamentosModule } from './modules/departamentos/departamentos.modul
 import { AgroserviciosModule } from './modules/agroservicios/agroservicios.module';
 import { ConsorciosCaminerosModule } from './modules/consorcios-camineros/consorcios-camineros.module';
 import { ExtrusorasSojaModule } from './modules/extrusoras-soja/extrusoras-soja.module';
+import { MapLayersModule } from './modules/map-layers/map-layers.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ExtrusorasSojaModule } from './modules/extrusoras-soja/extrusoras-soja.
     AgroserviciosModule,
     ConsorciosCaminerosModule,
     ExtrusorasSojaModule,
+    MapLayersModule,
   ],
 })
 export class AppModule {}

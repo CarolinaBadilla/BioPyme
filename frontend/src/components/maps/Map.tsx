@@ -8,29 +8,8 @@ import AddPointControl from "./AddPointControl";
 import DistanceCalculator from "./DistanceCalculator";
 import MapControls from "./MapControls";
 import { logger } from '../../utils/logger';
-import api from '../../services/api'; // 👈 Verifica que esta línea exista
 
-// Agregar estos iconos después de los imports
-const createLocalidadIcon = () => {
-  return L.divIcon({
-    html: `<div style="
-      background-color: #f59e0b;
-      width: 24px;
-      height: 24px;
-      border-radius: 12px 12px 4px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    ">🏘️</div>`,
-    className: "localidad-marker",
-    iconSize: [24, 24],
-    iconAnchor: [12, 24],
-  });
-};
-
+// Icono para puntos temporales (al agregar puntos en caliente)
 const createTempPointIcon = () => {
   return L.divIcon({
     html: `<div style="
@@ -40,113 +19,30 @@ const createTempPointIcon = () => {
       border-radius: 50%;
       border: 3px solid white;
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      animation: pulse 1.5s ease-in-out infinite;
     "></div>`,
     className: "temp-marker",
     iconSize: [16, 16],
   });
 };
 
-
-const createYpfIcon = () => {
+// 🌟 ICONO DINÁMICO UNIVERSAL (Lee el color y emoji configurado por el admin)
+const createDynamicMarkerIcon = (color: string = '#3b82f6', iconEmoji: string = '📍') => {
   return L.divIcon({
     html: `<div style="
-      background-color: #2563eb;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    ">⛽</div>`,
-    className: "ypf-marker",
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-  });
-};
-
-// Icono para estaciones bandera blanca (distinto al de YPF)
-const createEstacionBlancaIcon = () => {
-  return L.divIcon({
-    html: `<div style="
-      background-color: #ffffff;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      border: 2px solid #1e40af;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-      color: #1e40af;
-    ">⛽</div>`,
-    className: "estacion-blanca-marker",
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-  });
-};
-
-const createAgroservicioIcon = () => {
-  return L.divIcon({
-    html: `<div style="
-      background-color: #16a34a;
+      background-color: ${color};
       width: 26px;
       height: 26px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      font-size: 13px;
       border: 2px solid white;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    ">🚜</div>`,
-    className: "agroservicio-marker",
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    ">${iconEmoji}</div>`,
+    className: "dynamic-marker",
     iconSize: [26, 26],
     iconAnchor: [13, 13],
-  });
-};
-
-const createConsorcioIcon = () => {
-  return L.divIcon({
-    html: `<div style="
-      background-color: #d97706;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    ">🏗️</div>`,
-    className: "consorcio-marker",
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-  });
-};
-
-const createExtrusoraIcon = () => {
-  return L.divIcon({
-    html: `<div style="
-      background-color: #ea580c;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      border: 2px solid white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    ">🏭</div>`,
-    className: "extrusora-marker",
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
   });
 };
 
@@ -172,20 +68,17 @@ function RegionLabels({ regions, visible }: { regions: any[]; visible: boolean }
   
   useEffect(() => {
     if (!map || !regions || !visible) return;
-    
     markersRef.current.forEach(m => map.removeLayer(m));
     markersRef.current = [];
     
     regions.forEach((region: any) => {
       if (!region.geometry || !region.geometry.coordinates) return;
-      
       let coords: number[][] = [];
       if (region.geometry.type === "Polygon") {
         coords = region.geometry.coordinates[0];
       } else if (region.geometry.type === "MultiPolygon") {
         coords = region.geometry.coordinates[0][0];
       }
-      
       if (coords.length === 0) return;
       
       let sumLat = 0, sumLng = 0;
@@ -232,20 +125,17 @@ function DepartmentLabels({ departments, visible }: { departments: any[]; visibl
   
   useEffect(() => {
     if (!map || !departments || !visible) return;
-    
     markersRef.current.forEach(m => map.removeLayer(m));
     markersRef.current = [];
     
     departments.forEach((dept: any) => {
       if (!dept.geometry || !dept.geometry.coordinates) return;
-      
       let coords: number[][] = [];
       if (dept.geometry.type === "Polygon") {
         coords = dept.geometry.coordinates[0];
       } else if (dept.geometry.type === "MultiPolygon") {
         coords = dept.geometry.coordinates[0][0];
       }
-      
       if (coords.length === 0) return;
       
       let sumLat = 0, sumLng = 0;
@@ -289,126 +179,74 @@ interface MapProps {
   selectedCompany: Company | null;
   onSelectCompany: (company: Company) => void;
   radiusKm: number;
-  layers: {
-    regions: boolean;
-    departments: boolean;
-    cities: boolean;
-    plants: boolean;
-    localidades: boolean; 
-    ypf: boolean;
-    estacionesBlancas: boolean;
-    agroservicios: boolean;
-    consorciosCamineros: boolean;
-    extrusorasSoja: boolean;
-  };
+  layers: Record<string, boolean>; // Recibe un diccionario dinámico de capas activas
   onToggleLayer: (layer: string) => void;
   filterDepartamento: string;
   filterEstacionTipo: string;
 }
 
-export default function Map({ companies, selectedCompany, onSelectCompany, radiusKm, layers, onToggleLayer, filterDepartamento, filterEstacionTipo }: MapProps) {
+export default function Map({ companies, selectedCompany, onSelectCompany, radiusKm, layers, onToggleLayer, filterDepartamento }: MapProps) {
   const defaultCenter: [number, number] = [-31.4167, -64.1833];
   const [regions, setRegions] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [cities, setCities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [regionsReady, setRegionsReady] = useState(false);
+  
+  // 🌟 Estado unificado para las capas y puntos dinámicos de la base de datos
+  const [dynamicLayersData, setDynamicLayersData] = useState<any[]>([]);
+
   const regionLayerRef = useRef<L.GeoJSON | null>(null);
   const departmentLayerRef = useRef<L.GeoJSON | null>(null);
   const mapRef = useRef<L.Map | null>(null);
+  
   const [isAddingPoint, setIsAddingPoint] = useState(false);
   const [isMeasuringDistance, setIsMeasuringDistance] = useState(false);
   const [distancePoints, setDistancePoints] = useState<any[]>([]);
-  const [distanceResult, setDistanceResult] = useState<number | null>(null);
+  const [, setDistanceResult] = useState<number | null>(null);
   const [tempPoints, setTempPoints] = useState<any[]>([]);
   const [departamentosDatos, setDepartamentosDatos] = useState<Record<string, any>>({});
-  const [agroservicios, setAgroservicios] = useState<any[]>([]);
-  const [consorcios, setConsorcios] = useState<any[]>([]);
-  const [extrusoras, setExtrusoras] = useState<any[]>([]);
 
-  const [localidades, setLocalidades] = useState<any[]>([]);
-  const [ypfStations, setYpfStations] = useState<any[]>([]);
-  const [estacionesBlancas, setEstacionesBlancas] = useState<any[]>([]);
+  const API_URL = import.meta.env.VITE_API_URL;
 
-  // En el Map, al principio del componente (después de los useState)
-  logger.log('📊 MAP RENDER - Filtros recibidos:', {
-    filterDepartamento,
-    filterEstacionTipo,
-    ypfCount: ypfStations.length,
-    blancasCount: estacionesBlancas.length,
-    ypfFiltradas: ypfStations.filter(s => filterDepartamento === "todos" || s.departamento === filterDepartamento).length,
-    blancasFiltradas: estacionesBlancas.filter(s => filterDepartamento === "todos" || s.departamento === filterDepartamento).length
-  });
+  // 🌟 CARGA ÚNICA DE CAPAS DINÁMICAS DESDE EL NUEVO ENDPOINT
+  useEffect(() => {
+    fetch(`${API_URL}/map-layers/full`)
+      .then(res => res.json())
+      .then(data => {
+        logger.log('🗺️ Capas dinámicas cargadas en Mapa:', data);
+        setDynamicLayersData(Array.isArray(data) ? data : []);
+        setRegionsReady(true);
+        setLoading(false);
+      })
+      .catch(err => {
+        logger.error('Error loading dynamic map layers:', err);
+        setLoading(false);
+      });
+  }, [API_URL]);
 
-  // Agregar este useEffect al principio del componente Map (con los otros useEffect)
-    useEffect(() => {
-      logger.log('🔍 filterDepartamento:', filterDepartamento);
-      logger.log('🔍 filterEstacionTipo:', filterEstacionTipo);
-      logger.log('🔍 YPF con depto:', ypfStations.map(s => ({ nombre: s.nombre, depto: s.departamento })));
-      logger.log('🔍 Blancas con depto:', estacionesBlancas.map(s => ({ nombre: s.nombre, depto: s.departamento })));
-    }, [filterDepartamento, filterEstacionTipo, ypfStations, estacionesBlancas]);
-
-
-
-// Cargar datos (público - sin autenticación)
-useEffect(() => {
-  Promise.all([
-    fetch(`${API_URL}/localidades`).then(res => res.json()),
-    fetch(`${API_URL}/ypf`).then(res => res.json()),
-    fetch(`${API_URL}/agroservicios`).then(res => res.json()),
-    fetch(`${API_URL}/consorcios-camineros`).then(res => res.json()),
-    fetch(`${API_URL}/extrusoras-soja`).then(res => res.json()),
-    fetch(`${API_URL}/estaciones-blancas`).then(res => res.json()) // <--- Agregada aquí
-  ]).then(([localidadesData, ypfData, agroserviciosData, consorciosData, extrusorasData, estacionesBlancasData]) => {
-    console.log('📊 YPF cargadas en Map:', ypfData?.length || 0);
-    setLocalidades(localidadesData || []);
-    setYpfStations(Array.isArray(ypfData) ? ypfData : []);
-    setAgroservicios(Array.isArray(agroserviciosData) ? agroserviciosData : []); 
-    setConsorcios(Array.isArray(consorciosData) ? consorciosData : []);
-    setExtrusoras(Array.isArray(extrusorasData) ? extrusorasData : []);
-    setEstacionesBlancas(Array.isArray(estacionesBlancasData) ? estacionesBlancasData : []); // <--- Asignación del estado
-    setRegionsReady(true);
-    setLoading(false);
-  }).catch(err => {
-    console.error('Error loading data:', err);
-    setLoading(false);
-  });
-}, []);
-
-
-  // Cargar regiones
+  // Cargar regiones geográficas
   useEffect(() => {
     fetch('/data/geo/cordoba-regions.geojson')
       .then(res => res.json())
       .then(data => {
         const order = ["Región Centro", "Región Este", "Región Oeste", "Región Sur", "Región Noroeste", "Región Noreste"];
-        const sortedFeatures = [...data.features].sort((a, b) => {
+        const sortedFeatures = [...data.features].sort((a: any, b: any) => {
           return order.indexOf(a.properties.name) - order.indexOf(b.properties.name);
         });
         setRegions(sortedFeatures);
-        setRegionsReady(true);
-        setLoading(false);
-        
-        // ✅ FORZAR ACTUALIZACIÓN DEL MAPA después de cargar las regiones
         setTimeout(() => {
-          if (mapRef.current) {
-            mapRef.current.invalidateSize();
-          }
+          if (mapRef.current) mapRef.current.invalidateSize();
         }, 100);
       })
-      .catch(err => {
-        logger.error('Error loading regions:', err);
-        setLoading(false);
-      });
+      .catch(err => logger.error('Error loading regions:', err));
   }, []);
 
   // Cargar departamentos
   useEffect(() => {
     fetch('/data/geo/cordoba-departments.geojson')
       .then(res => res.json())
-      .then(data => {
-        setDepartments(data.features);
-      })
+      .then(data => setDepartments(data.features))
       .catch(err => logger.error('Error loading departments:', err));
   }, []);
 
@@ -416,331 +254,100 @@ useEffect(() => {
   useEffect(() => {
     fetch('/data/geo/cordoba-cities.json')
       .then(res => res.json())
-      .then(data => {
-        setCities(data.features);
-      })
+      .then(data => setCities(data.features))
       .catch(err => logger.error('Error loading cities:', err));
   }, []);
 
+  // Cargar datos demográficos de departamentos
+  useEffect(() => {
+    fetch(`${API_URL}/departamentos`)
+      .then(res => res.json())
+      .then(data => {
+        const map: Record<string, any> = {};
+        data.forEach((d: any) => { map[d.name] = d; });
+        setDepartamentosDatos(map);
+      })
+      .catch(err => logger.warn('Error cargando departamentos:', err));
+  }, [API_URL]);
 
-  // Manejar capa de polígonos de regiones (con control de interacción)
-    useEffect(() => {
-      if (!mapRef.current || !regionsReady || regions.length === 0) return;
-      
-      const map = mapRef.current;
-      
-      if (regionLayerRef.current) {
-        map.removeLayer(regionLayerRef.current);
-        regionLayerRef.current = null;
-      }
-      
-      if (layers.regions) {
-        regionLayerRef.current = L.geoJSON(regions as any, {
-          style: (feature) => ({
-            color: feature?.properties?.color || "#3b82f6",
-            weight: 1.5,
-            fillColor: feature?.properties?.fillColor || "#93c5fd",
-            fillOpacity: 0.15,
-          }),
-          // 👈 IMPORTANTE: controlar interacción cuando está activo agregar/medir
-          interactive: !isAddingPoint && !isMeasuringDistance,
-          onEachFeature: (feature, layer) => {
-            if (feature?.properties) {
-              // Solo bindear popup si no estamos en modo edición
-              if (!isAddingPoint && !isMeasuringDistance) {
-                layer.bindPopup(`<strong>🗺️ ${feature.properties.name}</strong>`);
-              } else {
-                // 👈 Si estamos en modo edición, NO mostrar popup
-                layer.unbindPopup();
-              }
-            }
-          },
-        }).addTo(map);
-      }
-    }, [regions, regionsReady, layers.regions, isAddingPoint, isMeasuringDistance]);
-
-
-// ============================================
-// Cargar datos demográficos de departamentos
-// ============================================
-useEffect(() => {
-  const API_URL = import.meta.env.VITE_API_URL;
-  fetch(`${API_URL}/departamentos`)
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    })
-    .then(data => {
-      const map: Record<string, any> = {};
-      data.forEach((d: any) => {
-        map[d.name] = d;
-      });
-      setDepartamentosDatos(map);
-      logger.log('✅ Datos departamentos cargados:', Object.keys(map).length);
-    })
-    .catch(err => {
-      logger.warn('Error cargando departamentos:', err);
-    });
-}, []);
-
-// ============================================
-// Manejar capa de polígonos de departamentos
-// ============================================
-useEffect(() => {
-  if (!mapRef.current || departments.length === 0) return;
-  
-  const map = mapRef.current;
-  
-  if (departmentLayerRef.current) {
-    map.removeLayer(departmentLayerRef.current);
-    departmentLayerRef.current = null;
-  }
-  
-  if (layers.departments) {
-    departmentLayerRef.current = L.geoJSON(departments as any, {
-      style: {
-        color: "#64748b",
-        weight: 1,
-        fillColor: "#cbd5e1",
-        fillOpacity: 0.2,
-      },
-      interactive: !isAddingPoint && !isMeasuringDistance,
-      onEachFeature: (feature, layer) => {
-        if (feature?.properties) {
-          const deptName = feature.properties.nombre;
-          const datos = departamentosDatos[deptName];
-          
-          if (!isAddingPoint && !isMeasuringDistance) {
-            let popupContent = `<strong>📋 ${deptName}</strong><hr style="margin: 4px 0"/>`;
-            
-            if (datos) {
-              popupContent += `
-                🏠 Viviendas totales: ${datos.totalViviendas?.toLocaleString() || 'N/D'}<br/>
-                🏢 Viviendas colectivas: ${datos.viviendasColectivas?.toLocaleString() || 'N/D'}<br/>
-                🏡 Viviendas particulares: ${datos.viviendasParticulares?.toLocaleString() || 'N/D'}<br/>
-                👨‍👩‍👧‍👦 Hogares: ${datos.hogares?.toLocaleString() || 'N/D'}<br/>
-                <hr style="margin: 4px 0"/>
-                👥 Población total: ${datos.poblacionTotal?.toLocaleString() || 'N/D'}<br/>
-                👩 Mujeres: ${datos.mujeres?.toLocaleString() || 'N/D'}<br/>
-                👨 Varones: ${datos.varones?.toLocaleString() || 'N/D'}
-              `;
-            } else {
-              popupContent += `<em>Datos no disponibles</em>`;
-            }
-            
-            layer.bindPopup(popupContent);
+  // Manejar capa de polígonos de regiones
+  useEffect(() => {
+    if (!mapRef.current || !regionsReady || regions.length === 0) return;
+    const map = mapRef.current;
+    
+    if (regionLayerRef.current) {
+      map.removeLayer(regionLayerRef.current);
+      regionLayerRef.current = null;
+    }
+    
+    if (layers.regions) {
+      regionLayerRef.current = L.geoJSON(regions as any, {
+        style: (feature) => ({
+          color: feature?.properties?.color || "#3b82f6",
+          weight: 1.5,
+          fillColor: feature?.properties?.fillColor || "#93c5fd",
+          fillOpacity: 0.15,
+        }),
+        interactive: !isAddingPoint && !isMeasuringDistance,
+        onEachFeature: (feature, layer) => {
+          if (feature?.properties && !isAddingPoint && !isMeasuringDistance) {
+            layer.bindPopup(`<strong>🗺️ ${feature.properties.name}</strong>`);
           } else {
             layer.unbindPopup();
           }
-        }
-      },
-    }).addTo(map);
-  }
-}, [departments, layers.departments, isAddingPoint, isMeasuringDistance, departamentosDatos]);
-
-useEffect(() => {
-  if (!mapRef.current || !isMeasuringDistance) return;
-  
-  const map = mapRef.current;
-  
-  const handleMapClick = (e: any) => {
-    if (distancePoints.length >= 2) return;
-    
-    const { lat, lng } = e.latlng;
-    const newPoints = [...distancePoints, { lat, lng }];
-    setDistancePoints(newPoints);
-    
-    // Crear marcador visual temporal
-    const marker = L.marker([lat, lng], {
-      icon: L.divIcon({
-        html: `<div style="
-          background-color: ${newPoints.length === 1 ? '#2563eb' : '#ef4444'};
-          width: 22px;
-          height: 22px;
-          border-radius: 50%;
-          border: 3px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-size: 11px;
-          font-weight: bold;
-        ">${newPoints.length}</div>`,
-        className: "distance-marker",
-        iconSize: [22, 22],
-      }),
-    }).addTo(map);
-    
-    // Guardar referencia para limpiar después
-    setTimeout(() => {
-      map.removeLayer(marker);
-    }, 5000);
-    
-    if (newPoints.length === 2) {
-      const R = 6371;
-      const dLat = (newPoints[1].lat - newPoints[0].lat) * Math.PI / 180;
-      const dLon = (newPoints[1].lng - newPoints[0].lng) * Math.PI / 180;
-      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(newPoints[0].lat * Math.PI / 180) * Math.cos(newPoints[1].lat * Math.PI / 180) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const dist = R * c;
-      
-      setDistanceResult(dist);
-      
-      // Dibujar línea
-      const polyline = L.polyline(
-        [[newPoints[0].lat, newPoints[0].lng], [newPoints[1].lat, newPoints[1].lng]],
-        { color: '#2563eb', weight: 3, dashArray: '8, 4' }
-      ).addTo(map);
-      
-      setTimeout(() => {
-        map.removeLayer(polyline);
-      }, 5000);
-      
-      // Desactivar después de 2 segundos
-      setTimeout(() => {
-        setIsMeasuringDistance(false);
-      }, 2000);
+        },
+      }).addTo(map);
     }
-  };
-  
-  map.on('click', handleMapClick);
-  
-  return () => {
-    map.off('click', handleMapClick);
-  };
-}, [isMeasuringDistance, distancePoints, mapRef.current]);
+  }, [regions, regionsReady, layers.regions, isAddingPoint, isMeasuringDistance]);
 
-
-
-// ============================================
-// EFECTO: AGREGAR PUNTO - Con popup en el mapa
-// ============================================
-useEffect(() => {
-  if (!mapRef.current || !isAddingPoint) return;
-
-  const map = mapRef.current;
-  let currentMarker: L.Marker | null = null;
-
-  const handleMapClick = (e: any) => {
-    if (currentMarker) return; // Si ya hay un popup abierto, ignorar
-
-    const { lat, lng } = e.latlng;
-    const id = `point-${Date.now()}`;
-
-    // Crear marcador temporal
-    currentMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
-
-    // Crear popup con formulario
-    currentMarker.bindPopup(`
-      <div style="min-width:200px;">
-        <strong>📍 Nuevo punto</strong><br/>
-        Lat: ${lat.toFixed(6)}<br/>
-        Lng: ${lng.toFixed(6)}<br/>
-        <input id="point-name-${id}" type="text" placeholder="Nombre del punto" style="margin-top: 5px; width: 100%; padding: 4px;"/>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-          <button id="save-point-${id}" style="flex:1; background: #2563eb; color: white; border: none; padding: 6px; border-radius: 4px; cursor: pointer;">
-            Guardar
-          </button>
-          <button id="cancel-point-${id}" style="flex:1; background: #ef4444; color: white; border: none; padding: 6px; border-radius: 4px; cursor: pointer;">
-            Cancelar
-          </button>
-        </div>
-      </div>
-    `).openPopup();
-
-    // Función para guardar
-    const handleSave = () => {
-      const nameInput = document.getElementById(`point-name-${id}`) as HTMLInputElement;
-      const name = nameInput?.value || `Punto ${tempPoints.length + 1}`;
-      
-      const newPoint = {
-        id: `temp-${Date.now()}`,
-        lat,
-        lng,
-        name,
-      };
-      setTempPoints([...tempPoints, newPoint]);
-      logger.log('✅ Punto agregado:', newPoint);
-      
-      if (currentMarker) {
-        currentMarker.remove();
-        currentMarker = null;
-      }
-      setIsAddingPoint(false);
-    };
-
-    // Función para cancelar
-    const handleCancel = () => {
-      if (currentMarker) {
-        currentMarker.remove();
-        currentMarker = null;
-      }
-      setIsAddingPoint(false);
-    };
-
-    // Esperar a que el DOM esté listo
-    setTimeout(() => {
-      const saveBtn = document.getElementById(`save-point-${id}`);
-      const cancelBtn = document.getElementById(`cancel-point-${id}`);
-      if (saveBtn) saveBtn.addEventListener('click', handleSave);
-      if (cancelBtn) cancelBtn.addEventListener('click', handleCancel);
-    }, 200);
-  };
-
-  map.on('click', handleMapClick);
-
-  return () => {
-    map.off('click', handleMapClick);
-    if (currentMarker) {
-      currentMarker.remove();
-      currentMarker = null;
+  // Manejar capa de polígonos de departamentos
+  useEffect(() => {
+    if (!mapRef.current || departments.length === 0) return;
+    const map = mapRef.current;
+    
+    if (departmentLayerRef.current) {
+      map.removeLayer(departmentLayerRef.current);
+      departmentLayerRef.current = null;
     }
+    
+    if (layers.departments) {
+      departmentLayerRef.current = L.geoJSON(departments as any, {
+        style: { color: "#64748b", weight: 1, fillColor: "#cbd5e1", fillOpacity: 0.2 },
+        interactive: !isAddingPoint && !isMeasuringDistance,
+        onEachFeature: (feature, layer) => {
+          if (feature?.properties) {
+            const deptName = feature.properties.nombre;
+            const datos = departamentosDatos[deptName];
+            if (!isAddingPoint && !isMeasuringDistance) {
+              let popupContent = `<strong>📋 ${deptName}</strong><hr style="margin: 4px 0"/>`;
+              if (datos) {
+                popupContent += `
+                  🏠 Viviendas totales: ${datos.totalViviendas?.toLocaleString() || 'N/D'}<br/>
+                  👥 Población total: ${datos.poblacionTotal?.toLocaleString() || 'N/D'}<br/>
+                `;
+              } else {
+                popupContent += `<em>Datos no disponibles</em>`;
+              }
+              layer.bindPopup(popupContent);
+            } else {
+              layer.unbindPopup();
+            }
+          }
+        },
+      }).addTo(map);
+    }
+  }, [departments, layers.departments, isAddingPoint, isMeasuringDistance, departamentosDatos]);
+
+  const handleAddPoint = (point: { lat: number; lng: number; name: string }) => {
+    const newPoint = { id: `temp-${Date.now()}`, lat: point.lat, lng: point.lng, name: point.name };
+    setTempPoints([...tempPoints, newPoint]);
+    setIsAddingPoint(false);
   };
-}, [isAddingPoint, mapRef.current, tempPoints]);
 
-
-const API_URL = import.meta.env.VITE_API_URL;
-// Cargar datos demográficos de departamentos
-// ============================================
-useEffect(() => {
-  fetch(`${API_URL}/departamentos`)
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    })
-    .then(data => {
-      const map: Record<string, any> = {};
-      data.forEach((d: any) => {
-        map[d.name] = d;
-      });
-      setDepartamentosDatos(map);
-      logger.log('✅ Datos departamentos cargados:', Object.keys(map).length);
-    })
-    .catch(err => {
-      logger.warn('Error cargando departamentos:', err);
-    });
-}, []);
-
-const handleAddPoint = (point: { lat: number; lng: number; name: string }) => {
-  const newPoint = {
-    id: `temp-${Date.now()}`,
-    lat: point.lat,
-    lng: point.lng,
-    name: point.name,
+  const handleDistanceCalculated = (dist: number, p1: any, p2: any) => {
+    setDistanceResult(dist);
+    setDistancePoints([p1, p2]);
   };
-  setTempPoints([...tempPoints, newPoint]);
-  logger.log('✅ Punto agregado:', newPoint);
-  setIsAddingPoint(false);
-};
-
-// FUNCIÓN handleDistanceCalculated
-const handleDistanceCalculated = (dist: number, p1: any, p2: any) => {
-  setDistanceResult(dist);
-  setDistancePoints([p1, p2]);
-};
 
   if (loading) {
     return <div className="flex items-center justify-center h-full">Cargando mapa...</div>;
@@ -755,43 +362,32 @@ const handleDistanceCalculated = (dist: number, p1: any, p2: any) => {
     >
       <TileLayer
         url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
-        attribution="Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
+        attribution="Tiles &copy; Esri"
         maxZoom={16}
       />
-      <LayerControl layers={layers} onToggle={onToggleLayer} />
-  <MapControls
-    isAddingPoint={isAddingPoint}
-    setIsAddingPoint={setIsAddingPoint}
-    isMeasuringDistance={isMeasuringDistance}
-    setIsMeasuringDistance={setIsMeasuringDistance}
-    distancePoints={distancePoints}
-    distanceResult={distanceResult}
-    setDistancePoints={setDistancePoints}  
-    setDistanceResult={setDistanceResult}   
-  />
+      
+      {/* 🌟 LE PASAMOS LAS CATEGORÍAS DINÁMICAS AL CONTROL DE CAPAS */}
+      <LayerControl categories={dynamicLayersData} layers={layers} onToggle={onToggleLayer} />
+      
+      <MapControls
+        isAddingPoint={isAddingPoint}
+        setIsAddingPoint={setIsAddingPoint}
+        isMeasuringDistance={isMeasuringDistance}
+        setIsMeasuringDistance={setIsMeasuringDistance}
+        distancePoints={distancePoints}
+        distanceResult={null}
+        setDistancePoints={setDistancePoints}  
+        setDistanceResult={setDistanceResult}   
+      />
 
-  {/* 👈 Lógica de agregar punto */}
-  <AddPointControl
-    onPointAdded={handleAddPoint}
-    isActive={isAddingPoint}
-    setIsActive={setIsAddingPoint}
-  />
+      <AddPointControl onPointAdded={handleAddPoint} isActive={isAddingPoint} setIsActive={setIsAddingPoint} />
+      <DistanceCalculator onDistanceCalculated={handleDistanceCalculated} isActive={isMeasuringDistance} setIsActive={setIsMeasuringDistance} />
 
-  {/* 👈 Lógica de medir distancia */}
-  <DistanceCalculator
-    onDistanceCalculated={handleDistanceCalculated}
-    isActive={isMeasuringDistance}
-    setIsActive={setIsMeasuringDistance}
-  />
-
-      {/* Etiquetas de regiones */}
-      <RegionLabels regions={regions} visible={layers.regions} />
-
-      {/* Etiquetas de departamentos */}
-      <DepartmentLabels departments={departments} visible={layers.departments} />
+      <RegionLabels regions={regions} visible={layers.regions ?? true} />
+      <DepartmentLabels departments={departments} visible={layers.departments ?? true} />
 
       {/* Ciudades - puntos */}
-      {layers.cities && cities.map((city: any, idx: number) => {
+      {(layers.cities ?? true) && cities.map((city: any, idx: number) => {
         const lat = city.geometry.coordinates[1];
         const lng = city.geometry.coordinates[0];
         return (
@@ -799,14 +395,7 @@ const handleDistanceCalculated = (dist: number, p1: any, p2: any) => {
             key={`city-${idx}`}
             position={[lat, lng]}
             icon={L.divIcon({
-              html: `<div style="
-                background-color: ${city.properties.tipo === 'capital_provincial' ? '#ef4444' : '#3b82f6'}; 
-                width: 8px; 
-                height: 8px; 
-                border-radius: 50%; 
-                border: 2px solid white;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-              "></div>`,
+              html: `<div style="background-color: ${city.properties.tipo === 'capital_provincial' ? '#ef4444' : '#3b82f6'}; width: 8px; height: 8px; border-radius: 50%; border: 2px solid white;"></div>`,
               className: "city-dot",
               iconSize: [8, 8],
             })}
@@ -820,164 +409,54 @@ const handleDistanceCalculated = (dist: number, p1: any, p2: any) => {
         );
       })}
 
-      {/* Localidades */}
-      {layers.localidades && localidades.map((loc: any) => (
-        <Marker
-          key={`localidad-${loc.id}`}
-          position={[loc.latitud, loc.longitud]}
-          icon={createLocalidadIcon()}
-        >
-          <Popup>
-            <strong>🏘️ {loc.nombre}</strong><br/>
-            👥 Habitantes: {loc.habitantes.toLocaleString()}<br/>
-            👤 Intendente: {loc.intendente}<br/>
-            🔗 Vínculo: {loc.vinculo || 'No especificado'}<br/>
-            🏭 Empresas: {loc.empresas || 'No especificadas'}<br/>
-            📍 Departamento: {loc.departamento}<br/>
-            🗺️ Región: {loc.region}
-          </Popup>
-        </Marker>
-      ))}
+      {/* 🌟 RENDERIZADO UNIVERSAL DE CAPAS DINÁMICAS (YPF, Blancas, Agroservicios y NUEVAS CAPAS) */}
+      {dynamicLayersData.map((category) => {
+        // Si el usuario desmarcó esta capa en el menú, no se dibuja
+        if (layers[category.slug] === false) return null;
 
-      
-      {/* Estaciones YPF */}
-      {layers.ypf && ypfStations
-      .filter((station: any) => {
-        // 👈 CORREGIR: Filtrar por departamento
-        if (filterDepartamento === "todos") return true;
-        return station.departamento === filterDepartamento;
-      })
-      .map((station: any) => (
-        <Marker
-          key={`ypf-${station.id}`}
-          position={[station.latitud, station.longitud]}
-          icon={createYpfIcon()}
-        >
-          <Popup>
-            <div style={{ minWidth: '150px' }}>
-              <strong style={{ color: '#1e40af', fontSize: '14px' }}>⛽ {station.nombre}</strong><br/>
-              📍 {station.direccion}
-              {station.departamento && <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '4px' }}>📍 {station.departamento}</div>}
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-
-      {/* Estaciones bandera blanca */}
-      {layers.estacionesBlancas && estacionesBlancas
-        .filter((estacion: any) => {
-          // 👈 CORREGIR: Filtrar por departamento
-          if (filterDepartamento === "todos") return true;
-          return estacion.departamento === filterDepartamento;
-        })
-        .map((estacion: any) => (
-          <Marker
-            key={`blanca-${estacion.id}`}
-            position={[estacion.latitud, estacion.longitud]}
-            icon={createEstacionBlancaIcon()}
-          >
-            <Popup>
-              <div style={{ minWidth: '150px' }}>
-                <strong style={{ color: '#1e40af' }}>⛽ {estacion.nombre}</strong><br/>
-                📍 {estacion.direccion}
-                {estacion.departamento && <div style={{ fontSize: '10px', color: '#6b7280', marginTop: '4px' }}>📍 {estacion.departamento}</div>}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-
-        {/* Marcadores de Agroservicios */}
-        {layers.agroservicios && agroservicios
-          .filter((item: any) => {
+        return category.features
+          .filter((feature: any) => {
             if (filterDepartamento === "todos") return true;
-            return item.departamento === filterDepartamento || item.localidad === filterDepartamento;
+            return feature.properties?.departamento === filterDepartamento || 
+                   feature.properties?.localidad === filterDepartamento;
           })
-          .map((item: any) => (
+          .map((feature: any) => (
             <Marker
-              key={`agroservicio-${item.id}`}
-              position={[item.latitud, item.longitud]}
-              icon={createAgroservicioIcon()}
+              key={`cat-${category.id}-feat-${feature.id}`}
+              position={[feature.latitude, feature.longitude]}
+              icon={createDynamicMarkerIcon(category.color, category.icon)}
             >
               <Popup>
-                <div style={{ minWidth: '180px' }}>
-                  <strong style={{ color: '#16a34a', fontSize: '14px' }}>🚜 {item.nombre}</strong><br/>
-                  <span style={{ fontSize: '12px' }}>📍 {item.direccion} ({item.localidad})</span><br/>
-                  <hr style={{ margin: '6px 0', borderColor: '#e5e7eb' }} />
-                  <div style={{ fontSize: '11px', color: '#374151' }}>
-                    💼 <strong>Tipo:</strong> {item.tipoNegocio}<br/>
-                    🏷️ <strong>Marca/Bandera:</strong> {item.marca || 'NINGUNA'}
-                  </div>
+                <div style={{ minWidth: '160px' }}>
+                  <strong style={{ color: category.color, fontSize: '14px' }}>
+                    {category.icon || '📍'} {feature.name}
+                  </strong>
+                  
+                  {/* Recorremos dinámicamente las propiedades adicionales guardadas en el JSON */}
+                  {feature.properties && Object.entries(feature.properties).map(([key, value]) => {
+                    if (!value) return null;
+                    return (
+                      <div key={key} style={{ fontSize: '11px', color: '#4b5563', marginTop: '3px' }}>
+                        <strong>{key}:</strong> {String(value)}
+                      </div>
+                    );
+                  })}
                 </div>
               </Popup>
             </Marker>
-          ))}
+          ));
+      })}
 
-          {layers.consorciosCamineros && consorcios
-            .filter((item: any) => {
-              if (filterDepartamento === "todos") return true;
-              return item.departamento === filterDepartamento || item.localidad === filterDepartamento;
-            })
-            .map((item: any) => (
-              <Marker
-                key={`consorcio-${item.id}`}
-                position={[item.latitud, item.longitud]}
-                icon={createConsorcioIcon()}
-              >
-                <Popup>
-                  <div style={{ minWidth: '160px' }}>
-                    <strong style={{ color: '#b45309', fontSize: '14px' }}>🏗️ {item.codigo} - {item.nombre}</strong><br/>
-                    <span style={{ fontSize: '12px' }}>📍 Localidad: {item.localidad}</span><br/>
-                    <span style={{ fontSize: '11px', color: '#4b5563' }}>🗺️ {item.regional}</span>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-
-            {layers.extrusorasSoja && extrusoras
-              .filter((item: any) => {
-                if (filterDepartamento === "todos") return true;
-                return item.departamento === filterDepartamento || item.localidad === filterDepartamento;
-              })
-              .map((item: any) => (
-                <Marker
-                  key={`extrusora-${item.id}`}
-                  position={[item.latitud, item.longitud]}
-                  icon={createExtrusoraIcon()}
-                >
-                  <Popup>
-                    <div style={{ minWidth: '160px' }}>
-                      <strong style={{ color: '#c2410c', fontSize: '14px' }}>🏭 {item.razonSocial}</strong><br/>
-                      <span style={{ fontSize: '12px' }}>📍 Localidad: {item.localidad}</span>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-
-      {/* 👈 AGREGAR ESTE BLOQUE - Puntos temporales */}
+      {/* Puntos temporales agregados en caliente */}
       {tempPoints.map((point) => (
-        <Marker
-          key={point.id}
-          position={[point.lat, point.lng]}
-          icon={createTempPointIcon()}
-        >
+        <Marker key={point.id} position={[point.lat, point.lng]} icon={createTempPointIcon()}>
           <Popup>
             <strong>📍 {point.name}</strong><br/>
             Lat: {point.lat.toFixed(6)}<br/>
             Lng: {point.lng.toFixed(6)}<br/>
             <button 
-              onClick={() => {
-                setTempPoints(tempPoints.filter(p => p.id !== point.id));
-              }}
-              style={{
-                marginTop: '8px',
-                width: '100%',
-                backgroundColor: '#ef4444',
-                color: 'white',
-                border: 'none',
-                padding: '5px',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
+              onClick={() => setTempPoints(tempPoints.filter(p => p.id !== point.id))}
+              style={{ marginTop: '8px', width: '100%', backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '5px', borderRadius: '4px', cursor: 'pointer' }}
             >
               🗑️ Eliminar punto
             </button>
@@ -985,11 +464,11 @@ const handleDistanceCalculated = (dist: number, p1: any, p2: any) => {
         </Marker>
       ))}
 
-      {/* Plantas */}
-      {layers.plants && companies.map((company) => (
+      {/* Plantas (Empresas) */}
+      {(layers.plants ?? true) && companies.map((company) => (
         <Marker
-          key={company.id}
-          position={[company.latitude, company.longitude]}
+          key={`company-${company.id}`}
+          position={[company.latitude!, company.longitude!]}
           eventHandlers={{ click: () => onSelectCompany(company) }}
         >
           <Popup>
@@ -1002,7 +481,7 @@ const handleDistanceCalculated = (dist: number, p1: any, p2: any) => {
         </Marker>
       ))}
 
-      {selectedCompany && (
+      {selectedCompany && selectedCompany.latitude && selectedCompany.longitude && (
         <>
           <Circle
             center={[selectedCompany.latitude, selectedCompany.longitude]}

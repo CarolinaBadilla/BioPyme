@@ -1,22 +1,12 @@
 import React from 'react';
 
 interface LayerControlProps {
-  layers: {
-    regions: boolean;
-    departments: boolean;
-    cities: boolean;
-    plants: boolean;
-    localidades: boolean;  
-    ypf: boolean;
-    estacionesBlancas: boolean;
-    agroservicios: boolean;
-    consorciosCamineros: boolean;
-    extrusorasSoja: boolean;
-  };
-  onToggle: (layer: string) => void;
+  categories: any[]; // 👈 Ahora recibe las categorías dinámicas de la BD
+  layers: Record<string, boolean>; // Estado booleano por slug de capa
+  onToggle: (slug: string) => void;
 }
 
-export default function LayerControl({ layers, onToggle }: LayerControlProps) {
+export default function LayerControl({ categories, layers, onToggle }: LayerControlProps) {
   return (
     <div style={{
       position: 'absolute',
@@ -28,61 +18,46 @@ export default function LayerControl({ layers, onToggle }: LayerControlProps) {
       borderRadius: '8px',
       boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
       fontSize: '12px',
-      minWidth: '160px',
+      minWidth: '180px',
       border: '1px solid #e2e8f0'
     }}>
       <h4 style={{ margin: '0 0 10px 0', fontWeight: 'bold', color: '#1e3a5f' }}>🗺️ Capas del mapa</h4>
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {/* Capas base del sistema */}
         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={layers.regions} onChange={() => onToggle('regions')} />
+          <input type="checkbox" checked={layers.regions ?? true} onChange={() => onToggle('regions')} />
           <span>🗺️ Regiones</span>
         </label>
         
         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={layers.departments} onChange={() => onToggle('departments')} />
+          <input type="checkbox" checked={layers.departments ?? true} onChange={() => onToggle('departments')} />
           <span>📋 Departamentos</span>
         </label>
         
         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={layers.cities} onChange={() => onToggle('cities')} />
+          <input type="checkbox" checked={layers.cities ?? true} onChange={() => onToggle('cities')} />
           <span>🏙️ Ciudades</span>
         </label>
-        
+
         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={layers.plants} onChange={() => onToggle('plants')} />
+          <input type="checkbox" checked={layers.plants ?? true} onChange={() => onToggle('plants')} />
           <span>🌱 Plantas</span>
         </label>
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={layers.localidades} onChange={() => onToggle('localidades')} />
-          <span>🏘️ Localidades adheridas</span>
-        </label>
+        <hr style={{ margin: '4px 0', borderColor: '#e2e8f0' }} />
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={layers.ypf} onChange={() => onToggle('ypf')} />
-          <span>⛽ Estaciones YPF</span>
-        </label>
-
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={layers.estacionesBlancas} onChange={() => onToggle('estacionesBlancas')} />
-          <span>⚪ Estaciones bandera blanca</span>
-        </label>
-
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={layers.agroservicios} onChange={() => onToggle('agroservicios')} />
-          <span>🚜 Agroservicios</span>
-        </label>
-
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={layers.consorciosCamineros} onChange={() => onToggle('consorciosCamineros')} />
-          <span>🏗️ Consorcios Camineros</span>
-        </label>
-
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-          <input type="checkbox" checked={layers.extrusorasSoja} onChange={() => onToggle('extrusorasSoja')} />
-          <span>🏭 Extrusoras de Soja</span>
-        </label>
+        {/* Capas Dinámicas creadas por los administradores */}
+        {categories.map((cat) => (
+          <label key={cat.slug} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+            <input 
+              type="checkbox" 
+              checked={layers[cat.slug] ?? true} 
+              onChange={() => onToggle(cat.slug)} 
+            />
+            <span>{cat.icon || '📍'} {cat.name}</span>
+          </label>
+        ))}
       </div>
     </div>
   );

@@ -2,15 +2,6 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 
-type EntityType = 'ypf' | 'blancas' | 'agroservicios' | 'consorcios' | 'extrusoras' | 'localidades' | 'plantas';
-
-interface EntityConfig {
-  label: string;
-  endpoint: string;
-  icon: string;
-  nameKey: string;
-}
-
 interface User {
   id: number;
   email: string;
@@ -25,32 +16,28 @@ interface RequestItem {
   createdAt: string;
 }
 
-const ENTITY_CONFIG: Record<EntityType, EntityConfig> = {
-  ypf: { label: 'YPF', endpoint: 'ypf', icon: '🔵', nameKey: 'nombre' },
-  blancas: { label: 'Bandera Blanca', endpoint: 'estaciones-blancas', icon: '⚪', nameKey: 'nombre' },
-  agroservicios: { label: 'Agroservicios', endpoint: 'agroservicios', icon: '🌾', nameKey: 'nombre' },
-  consorcios: { label: 'Consorcios Camineros', endpoint: 'consorcios-camineros', icon: '🚜', nameKey: 'nombre' },
-  extrusoras: { label: 'Extrusoras de Soja', endpoint: 'extrusoras-soja', icon: '🌱', nameKey: 'razonSocial' },
-  localidades: { label: 'Localidades', endpoint: 'localidades', icon: '🏙️', nameKey: 'nombre' },
-  plantas: { label: 'Plantas', endpoint: 'companies', icon: '🏭', nameKey: 'name' },
-};
-
 export default function AdminPanel() {
   const { user } = useAuth();
-  
-  // Pestañas Principales
+
   const [activeTab, setActiveTab] = useState<'users' | 'requests' | 'mapa'>('users');
-  
-  // Usuarios y Solicitudes
   const [users, setUsers] = useState<User[]>([]);
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [newUser, setNewUser] = useState({ email: '', password: '', role: 'ASSISTANT', name: '' });
 
-  // Entidades del Mapa
-  const [entityType, setEntityType] = useState<EntityType>('ypf');
-  const [items, setItems] = useState<any[]>([]);
-  const [editingItem, setEditingItem] = useState<any | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
+  // --- ESTADOS DINÁMICOS PARA CAPAS Y PUNTOS ---
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
+  const [features, setFeatures] = useState<any[]>([]);
+
+  // Estados para formularios
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryColor, setNewCategoryColor] = useState('#3b82f6');
+  const [newCategoryIcon, setNewCategoryIcon] = useState('📍');
+
+  const [editingFeature, setEditingFeature] = useState<any | null>(null);
+  const [isCreatingFeature, setIsCreatingFeature] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -61,102 +48,169 @@ export default function AdminPanel() {
   useEffect(() => {
     if (user?.role === 'ADMIN') fetchUsers();
     fetchRequests();
-    if (canEditMap) fetchItems(entityType);
+    if (canEditMap) fetchCategories();
   }, []);
 
+  // --- FUNCIONES DE USUARIOS Y SOLICITUDES ---
   const fetchUsers = async () => {
     try {
       const res = await api.get('/users');
       setUsers(res.data);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const fetchRequests = async () => {
     try {
       const res = await api.get('/requests');
       setRequests(res.data);
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const createUser = async () => {
     if (!newUser.email || !newUser.password) return;
-    await api.post('/users', newUser);
-    fetchUsers();
-    setNewUser({ email: '', password: '', role: 'ASSISTANT', name: '' });
+    try {
+      await api.post('/users', newUser);
+      fetchUsers();
+      setNewUser({ email: '', password: '', role: 'ASSISTANT', name: '' });
+      setSuccess('✅ Usuario creado correctamente');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError('Error al crear el usuario');
+    }
   };
 
   const deleteUser = async (id: number) => {
     if (window.confirm('¿Eliminar usuario?')) {
-      await api.delete(`/users/${id}`);
-      fetchUsers();
+      try {
+        await api.delete(`/users/${id}`);
+        fetchUsers();
+      } catch (err) {
+        setError('Error al eliminar usuario');
+      }
     }
   };
 
   const approveRequest = async (id: number) => {
-    await api.post(`/requests/${id}/approve`);
-    fetchRequests();
+    try {
+      await api.post(`/requests/${id}/approve`);
+      fetchRequests();
+    } catch (err) {
+      setError('Error al aprobar solicitud');
+    }
   };
 
   const rejectRequest = async (id: number) => {
     const notes = prompt('Motivo del rechazo:');
-    if (notes) await api.post(`/requests/${id}/reject`, { notes });
-    fetchRequests();
+    if (notes) {
+      try {
+        await api.post(`/requests/${id}/reject`, { notes });
+        fetchRequests();
+      } catch (err) {
+        setError('Error al rechazar solicitud');
+      }
+    }
   };
 
-  const fetchItems = async (targetType: EntityType = entityType) => {
+  // --- FUNCIONES DE CAPAS DINÁMICAS ---
+  const fetchCategories = async () => {
     setLoading(true);
-    setError(null);
     try {
-      const config = ENTITY_CONFIG[targetType];
-      const response = await api.get(`/${config.endpoint}`);
-      setItems(response.data);
+      const res = await api.get('/map-layers/categories');
+      setCategories(res.data);
+      if (res.data.length > 0 && !selectedCategory) {
+        setSelectedCategory(res.data[0]);
+        fetchFeatures(res.data[0].id);
+      }
     } catch (err) {
-      setError(`Error 404/500 al cargar ${ENTITY_CONFIG[targetType].label}`);
+      setError('Error al cargar las categorías');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTypeChange = (type: EntityType) => {
-    setItems([]);
-    setEntityType(type);
-    setEditingItem(null);
-    setIsCreating(false);
-    fetchItems(type);
-  };
-
-  const handleSave = async (data: any) => {
-    setError(null);
-    setSuccess(null);
-    const config = ENTITY_CONFIG[entityType];
-
+  const fetchFeatures = async (categoryId: number) => {
+    setLoading(true);
     try {
-      if (isCreating) {
-        await api.post(`/${config.endpoint}`, data);
-        setSuccess(`✅ ${config.label} creada correctamente`);
-      } else {
-        await api.put(`/${config.endpoint}/${data.id}`, data);
-        setSuccess(`✅ ${config.label} actualizada correctamente`);
-      }
-      setTimeout(() => setSuccess(null), 3000);
-      await fetchItems(entityType);
-      setEditingItem(null);
-      setIsCreating(false);
+      const res = await api.get(`/map-layers/full`);
+      const cat = res.data.find((c: any) => c.id === categoryId);
+      setFeatures(cat ? cat.features : []);
     } catch (err) {
-      setError('Error al guardar los cambios');
+      setError('Error al cargar los puntos');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('¿Deseas eliminar este registro?')) return;
-    setError(null);
-    const config = ENTITY_CONFIG[entityType];
+  const handleSelectCategory = (cat: any) => {
+    setSelectedCategory(cat);
+    setEditingFeature(null);
+    setIsCreatingFeature(false);
+    fetchFeatures(cat.id);
+  };
 
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategoryName) return;
     try {
-      await api.delete(`/${config.endpoint}/${id}`);
-      setSuccess(`🗑️ Registro eliminado`);
+      const slug = newCategoryName.toLowerCase().replace(/ /g, '-').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const res = await api.post('/map-layers/categories', {
+        name: newCategoryName,
+        slug,
+        color: newCategoryColor,
+        icon: newCategoryIcon,
+      });
+      setSuccess('✅ Categoría creada correctamente');
+      setNewCategoryName('');
+      setIsCreatingCategory(false);
+      await fetchCategories();
+      handleSelectCategory(res.data);
+    } catch (err) {
+      setError('Error al crear la categoría (quizá el nombre ya exista)');
+    }
+  };
+
+  const handleSaveFeature = async (formData: any) => {
+    setError(null);
+    try {
+      const payload = {
+        categoryId: selectedCategory.id,
+        name: formData.name,
+        latitude: Number(formData.latitude),
+        longitude: Number(formData.longitude),
+        properties: {
+          direccion: formData.direccion || '',
+          localidad: formData.localidad || '',
+          departamento: formData.departamento || '',
+        }
+      };
+
+      if (isCreatingFeature) {
+        await api.post('/map-layers/features', payload);
+        setSuccess('✅ Punto agregado correctamente');
+      } else {
+        await api.put(`/map-layers/features/${editingFeature.id}`, payload);
+        setSuccess('✅ Punto actualizado correctamente');
+      }
       setTimeout(() => setSuccess(null), 3000);
-      await fetchItems(entityType);
+      setIsCreatingFeature(false);
+      setEditingFeature(null);
+      fetchFeatures(selectedCategory.id);
+    } catch (err) {
+      setError('Error al guardar el punto');
+    }
+  };
+
+  const handleDeleteFeature = async (id: number) => {
+    if (!window.confirm('¿Eliminar este punto?')) return;
+    try {
+      await api.delete(`/map-layers/features/${id}`);
+      setSuccess('🗑️ Punto eliminado');
+      setTimeout(() => setSuccess(null), 3000);
+      fetchFeatures(selectedCategory.id);
     } catch (err) {
       setError('Error al eliminar');
     }
@@ -292,54 +346,94 @@ export default function AdminPanel() {
           </div>
         )}
 
-        {/* PESTAÑA: CAPAS DEL MAPA */}
+        {/* PESTAÑA: CAPAS DEL MAPA (DINÁMICAS) */}
         {activeTab === 'mapa' && (
           <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-4">
             <div className="flex justify-between items-center flex-wrap gap-4">
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {(Object.keys(ENTITY_CONFIG) as EntityType[]).map((type) => (
+              <div className="flex gap-2 overflow-x-auto pb-2 items-center">
+                {categories.map((cat) => (
                   <button
-                    key={type}
-                    onClick={() => handleTypeChange(type)}
+                    key={cat.id}
+                    onClick={() => handleSelectCategory(cat)}
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition whitespace-nowrap ${
-                      entityType === type ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-300'
+                      selectedCategory?.id === cat.id ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-300'
                     }`}
                   >
-                    {ENTITY_CONFIG[type].icon} {ENTITY_CONFIG[type].label}
+                    {cat.icon || '📍'} {cat.name}
                   </button>
                 ))}
+                <button
+                  onClick={() => setIsCreatingCategory(!isCreatingCategory)}
+                  className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 rounded-lg text-sm font-medium whitespace-nowrap"
+                >
+                  ✨ Nueva Capa / Categoría
+                </button>
               </div>
 
-              {!isCreating && !editingItem && (
+              {selectedCategory && !isCreatingFeature && !editingFeature && !isCreatingCategory && (
                 <button
-                  onClick={() => setIsCreating(true)}
+                  onClick={() => setIsCreatingFeature(true)}
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold"
                 >
-                  ➕ Agregar {ENTITY_CONFIG[entityType].label}
+                  ➕ Agregar punto a {selectedCategory.name}
                 </button>
               )}
             </div>
+
+            {/* Formulario para crear NUEVA CATEGORÍA de mapa */}
+            {isCreatingCategory && (
+              <form onSubmit={handleCreateCategory} className="bg-slate-700 p-4 rounded-xl space-y-3 border border-emerald-500">
+                <h3 className="text-md font-bold text-emerald-400">✨ Crear una nueva capa para el mapa</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <input
+                    type="text"
+                    placeholder="Nombre (ej: Hospitales, Bomberos)"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    className="p-2 bg-slate-600 rounded-lg text-sm text-white"
+                    required
+                  />
+                  <input
+                    type="text"
+                    placeholder="Emoji/Ícono (ej: 🏥)"
+                    value={newCategoryIcon}
+                    onChange={(e) => setNewCategoryIcon(e.target.value)}
+                    className="p-2 bg-slate-600 rounded-lg text-sm text-white"
+                  />
+                  <input
+                    type="color"
+                    value={newCategoryColor}
+                    onChange={(e) => setNewCategoryColor(e.target.value)}
+                    className="p-1 h-10 w-full bg-slate-600 rounded-lg cursor-pointer"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="px-3 py-1.5 bg-emerald-600 rounded-lg text-xs font-bold">Guardar Categoría</button>
+                  <button type="button" onClick={() => setIsCreatingCategory(false)} className="px-3 py-1.5 bg-slate-600 rounded-lg text-xs">Cancelar</button>
+                </div>
+              </form>
+            )}
 
             {success && <div className="bg-green-900/50 border border-green-700 p-3 rounded-lg text-green-400">{success}</div>}
             {error && <div className="bg-red-900/50 border border-red-700 p-3 rounded-lg text-red-400">{error}</div>}
 
             {loading ? (
-              <div className="text-center py-12">Cargando datos...</div>
-            ) : isCreating || editingItem ? (
-              <GenericForm
-                initialData={editingItem || {}}
-                isCreating={isCreating}
-                type={entityType}
-                onSave={handleSave}
-                onCancel={() => { setEditingItem(null); setIsCreating(false); }}
+              <div className="text-center py-12">Cargando...</div>
+            ) : isCreatingFeature || editingFeature ? (
+              <DynamicFeatureForm
+                initialData={editingFeature || {}}
+                isCreating={isCreatingFeature}
+                onSave={handleSaveFeature}
+                onCancel={() => { setEditingFeature(null); setIsCreatingFeature(false); }}
+              />
+            ) : selectedCategory ? (
+              <DynamicFeatureTable
+                features={features}
+                onEdit={setEditingFeature}
+                onDelete={handleDeleteFeature}
               />
             ) : (
-              <GenericTable
-                items={items}
-                config={ENTITY_CONFIG[entityType]}
-                onEdit={setEditingItem}
-                onDelete={handleDelete}
-              />
+              <div className="text-slate-400 py-8 text-center">Crea una categoría arriba para empezar a cargar puntos.</div>
             )}
           </div>
         )}
@@ -348,129 +442,75 @@ export default function AdminPanel() {
   );
 }
 
-// ============================================
-// COMPONENTE TABLA GENÉRICA CON BUSCADOR Y FILTRO DE DEPARTAMENTO
-// ============================================
-function GenericTable({ items, config, onEdit, onDelete }: any) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [deptoFilter, setDeptoFilter] = useState('todos');
-
-  // Extraer lista única de departamentos
-  const departamentos: string[] = [
-    ...new Set(items.map((i: any) => i.departamento || i.department).filter(Boolean))
-  ].sort() as string[];
-
-  const filteredItems = items.filter((item: any) => {
-    const name = (item[config.nameKey] || item.nombre || item.name || '').toLowerCase();
-    const loc = (item.localidad || '').toLowerCase();
-    const matchesSearch = name.includes(searchTerm.toLowerCase()) || loc.includes(searchTerm.toLowerCase());
-    const itemDepto = item.departamento || item.department;
-    const matchesDepto = deptoFilter === 'todos' || itemDepto === deptoFilter;
-    return matchesSearch && matchesDepto;
-  });
-
+function DynamicFeatureTable({ features, onEdit, onDelete }: any) {
   return (
-    <div>
-      {/* 2. BARRA DE BÚSQUEDA Y FILTRO DE DEPARTAMENTO */}
-      <div className="flex flex-wrap gap-3 mb-4">
-        <input
-          type="text"
-          placeholder="🔍 Buscar por nombre o localidad..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 min-w-[200px] px-4 py-2 bg-slate-700 border border-slate-600 rounded-xl text-white text-sm"
-        />
-        {departamentos.length > 0 && (
-          <select
-            value={deptoFilter}
-            onChange={(e) => setDeptoFilter(e.target.value)}
-            className="px-4 py-2 bg-slate-700 border border-slate-600 rounded-xl text-white text-sm"
-          >
-            <option value="todos">📍 Todos los departamentos</option>
-            {departamentos.map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
-        )}
-        <span className="text-sm text-slate-400 self-center">
-          {filteredItems.length} registros
-        </span>
-      </div>
-
-      <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-slate-700 sticky top-0 text-xs text-slate-400">
-            <tr>
-              <th className="p-3">Nombre</th>
-              <th className="p-3">Localidad</th>
-              <th className="p-3">Depto</th>
-              <th className="p-3">Coordenadas</th>
-              <th className="p-3 text-right">Acciones</th>
+    <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
+      <table className="w-full text-left border-collapse">
+        <thead className="bg-slate-700 sticky top-0 text-xs text-slate-400">
+          <tr>
+            <th className="p-3">Nombre</th>
+            <th className="p-3">Dirección / Localidad</th>
+            <th className="p-3">Coordenadas</th>
+            <th className="p-3 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-700 text-sm">
+          {features.map((item: any) => (
+            <tr key={item.id} className="hover:bg-slate-700/50">
+              <td className="p-3 font-medium">{item.name}</td>
+              <td className="p-3 text-slate-300">{item.properties?.direccion || item.properties?.localidad || '-'}</td>
+              <td className="p-3 font-mono text-slate-400">{item.latitude}, {item.longitude}</td>
+              <td className="p-3 text-right space-x-2">
+                <button onClick={() => onEdit(item)} className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 rounded text-xs">✏️ Editar</button>
+                <button onClick={() => onDelete(item.id)} className="px-2.5 py-1 bg-red-600 hover:bg-red-700 rounded text-xs">🗑️ Borrar</button>
+              </td>
             </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-700 text-sm">
-            {filteredItems.map((item: any) => (
-              <tr key={`${config.endpoint}-${item.id}`} className="hover:bg-slate-700/50">
-                <td className="p-3 font-medium">{item[config.nameKey] || item.nombre || item.name || '-'}</td>
-                <td className="p-3 text-slate-300">{item.localidad || '-'}</td>
-                <td className="p-3 text-slate-300">{item.departamento || item.department || '-'}</td>
-                <td className="p-3 font-mono text-slate-400">{item.latitud || item.latitude}, {item.longitud || item.longitude}</td>
-                <td className="p-3 text-right space-x-2">
-                  <button onClick={() => onEdit(item)} className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 rounded text-xs">✏️ Editar</button>
-                  <button onClick={() => onDelete(item.id)} className="px-2.5 py-1 bg-red-600 hover:bg-red-700 rounded text-xs">🗑️ Borrar</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
 
-// ============================================
-// COMPONENTE FORMULARIO CON CAMPOS DINÁMICOS
-// ============================================
-function GenericForm({ initialData, isCreating, type, onSave, onCancel }: any) {
-  const config = ENTITY_CONFIG[type as EntityType];
-  const [formData, setFormData] = useState<any>({
-    [config.nameKey]: '',
-    direccion: '',
-    localidad: '',
-    departamento: '',
-    latitud: -31.4,
-    longitud: -64.1,
-    tipoNegocio: 'AGROSERVICIO',
-    marca: 'INDIVIDUAL',
+function DynamicFeatureForm({ initialData, isCreating, onSave, onCancel }: any) {
+  const [formData, setFormData] = useState({
+    name: initialData.name || '',
+    direccion: initialData.properties?.direccion || '',
+    localidad: initialData.properties?.localidad || '',
+    departamento: initialData.properties?.departamento || '',
+    latitude: initialData.latitude || -31.4167,
+    longitude: initialData.longitude || -64.1833,
     ...initialData
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
-
   return (
-    <form onSubmit={handleSubmit} className="bg-slate-700 p-6 rounded-xl space-y-4">
-      <h3 className="text-lg font-bold">
-        {isCreating ? `➕ Agregar ${config.label}` : `✏️ Editando: ${initialData[config.nameKey] || initialData.nombre}`}
-      </h3>
+    <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="bg-slate-700 p-6 rounded-xl space-y-4">
+      <h3 className="text-lg font-bold">{isCreating ? '➕ Agregar nuevo punto' : '✏️ Editar punto'}</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs mb-1">Nombre / Razón Social *</label>
+          <label className="block text-xs mb-1">Nombre *</label>
           <input
             type="text"
-            value={formData[config.nameKey] || ''}
-            onChange={(e) => setFormData({ ...formData, [config.nameKey]: e.target.value })}
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             className="w-full p-2 bg-slate-600 rounded-lg text-sm text-white"
             required
+          />
+        </div>
+        <div>
+          <label className="block text-xs mb-1">Dirección</label>
+          <input
+            type="text"
+            value={formData.direccion}
+            onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+            className="w-full p-2 bg-slate-600 rounded-lg text-sm text-white"
           />
         </div>
         <div>
           <label className="block text-xs mb-1">Localidad</label>
           <input
             type="text"
-            value={formData.localidad || ''}
+            value={formData.localidad}
             onChange={(e) => setFormData({ ...formData, localidad: e.target.value })}
             className="w-full p-2 bg-slate-600 rounded-lg text-sm text-white"
           />
@@ -479,45 +519,18 @@ function GenericForm({ initialData, isCreating, type, onSave, onCancel }: any) {
           <label className="block text-xs mb-1">Departamento</label>
           <input
             type="text"
-            value={formData.departamento || ''}
+            value={formData.departamento}
             onChange={(e) => setFormData({ ...formData, departamento: e.target.value })}
             className="w-full p-2 bg-slate-600 rounded-lg text-sm text-white"
           />
         </div>
-
-        {/* 4. CAMPOS ADICIONALES PARA AGROSERVICIOS */}
-        {type === 'agroservicios' && (
-          <>
-            <div>
-              <label className="block text-xs mb-1">Tipo de Negocio</label>
-              <input
-                type="text"
-                placeholder="AGROSERVICIO"
-                value={formData.tipoNegocio || ''}
-                onChange={(e) => setFormData({ ...formData, tipoNegocio: e.target.value })}
-                className="w-full p-2 bg-slate-600 rounded-lg text-sm text-white"
-              />
-            </div>
-            <div>
-              <label className="block text-xs mb-1">Marca / Bandera</label>
-              <input
-                type="text"
-                placeholder="INDIVIDUAL"
-                value={formData.marca || ''}
-                onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
-                className="w-full p-2 bg-slate-600 rounded-lg text-sm text-white"
-              />
-            </div>
-          </>
-        )}
-
         <div>
           <label className="block text-xs mb-1">Latitud *</label>
           <input
             type="number"
             step="0.000001"
-            value={formData.latitud || formData.latitude || ''}
-            onChange={(e) => setFormData({ ...formData, latitud: parseFloat(e.target.value), latitude: parseFloat(e.target.value) })}
+            value={formData.latitude}
+            onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
             className="w-full p-2 bg-slate-600 rounded-lg text-sm text-white"
             required
           />
@@ -527,8 +540,8 @@ function GenericForm({ initialData, isCreating, type, onSave, onCancel }: any) {
           <input
             type="number"
             step="0.000001"
-            value={formData.longitud || formData.longitude || ''}
-            onChange={(e) => setFormData({ ...formData, longitud: parseFloat(e.target.value), longitude: parseFloat(e.target.value) })}
+            value={formData.longitude}
+            onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
             className="w-full p-2 bg-slate-600 rounded-lg text-sm text-white"
             required
           />
