@@ -427,22 +427,28 @@ export default function Map({ companies, selectedCompany, onSelectCompany, radiu
               icon={createDynamicMarkerIcon(category.color, category.icon)}
             >
               <Popup>
-                <div style={{ minWidth: '160px' }}>
-                  <strong style={{ color: category.color, fontSize: '14px' }}>
-                    {category.icon || '📍'} {feature.name}
-                  </strong>
-                  
-                  {/* Recorremos dinámicamente las propiedades adicionales guardadas en el JSON */}
+              <div style={{ minWidth: '200px', fontFamily: 'system-ui, sans-serif', padding: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', borderBottom: '2px solid ' + category.color, paddingBottom: '6px' }}>
+                  <span style={{ fontSize: '18px' }}>{category.icon || '📍'}</span>
+                  <div>
+                    <strong style={{ color: '#1e293b', fontSize: '14px', display: 'block' }}>{feature.name}</strong>
+                    <span style={{ fontSize: '10px', color: category.color, fontWeight: 'bold', textTransform: 'uppercase' }}>{category.name}</span>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', color: '#475569' }}>
                   {feature.properties && Object.entries(feature.properties).map(([key, value]) => {
                     if (!value) return null;
                     return (
-                      <div key={key} style={{ fontSize: '11px', color: '#4b5563', marginTop: '3px' }}>
-                        <strong>{key}:</strong> {String(value)}
+                      <div key={key} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ textTransform: 'capitalize', color: '#94a3b8' }}>{key}:</span>
+                        <span style={{ fontWeight: 500, color: '#334155', textAlign: 'right' }}>{String(value)}</span>
                       </div>
                     );
                   })}
                 </div>
-              </Popup>
+              </div>
+            </Popup>
             </Marker>
           ));
       })}
