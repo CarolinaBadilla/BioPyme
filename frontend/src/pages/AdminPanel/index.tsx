@@ -188,11 +188,7 @@ export default function AdminPanel() {
         name: formData.name,
         latitude: Number(formData.latitude),
         longitude: Number(formData.longitude),
-        properties: {
-          direccion: formData.direccion || '',
-          localidad: formData.localidad || '',
-          departamento: formData.departamento || '',
-        }
+        properties: formData.properties // 👈 Recibe directamente el objeto consolidado que arma el formulario
       };
 
       if (isCreatingFeature) {
@@ -454,7 +450,7 @@ export default function AdminPanel() {
               />
             ) : selectedCategory ? (
               <DynamicFeatureTable
-                features={features}
+                features={filteredFeatures}
                 onEdit={setEditingFeature}
                 onDelete={handleDeleteFeature}
               />
