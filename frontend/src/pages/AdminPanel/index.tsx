@@ -506,19 +506,20 @@ function DynamicFeatureForm({ initialData, isCreating, onSave, onCancel }: any) 
     ...initialData
   });
 
-  // Campos base fijos guardados dentro de properties
+  // Asegurarnos de extraer properties de forma segura
+  const rawProps = initialData.properties || {};
+  const propertiesObj = typeof rawProps === 'string' ? JSON.parse(rawProps) : rawProps;
+
   const [baseProps, setBaseProps] = useState({
-    direccion: initialData.properties?.direccion || '',
-    localidad: initialData.properties?.localidad || '',
-    departamento: initialData.properties?.departamento || '',
+    direccion: propertiesObj.direccion || '',
+    localidad: propertiesObj.localidad || '',
+    departamento: propertiesObj.departamento || '',
   });
 
-  // Filtramos los campos base para quedarnos solo con los "extras" personalizados en el array dinámico
-  const initialProperties = initialData.properties || {};
   const baseKeys = ['direccion', 'localidad', 'departamento'];
   
   const [customFields, setCustomFields] = useState<Array<{ key: string; value: string }>>(
-    Object.entries(initialProperties)
+    Object.entries(propertiesObj)
       .filter(([key]) => !baseKeys.includes(key))
       .map(([key, value]) => ({ key, value: String(value) }))
   );
@@ -540,7 +541,7 @@ function DynamicFeatureForm({ initialData, isCreating, onSave, onCancel }: any) 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Consolidamos propiedades base + atributos extras personalizados
+    // Consolidamos todo en un objeto plano para properties
     const finalProperties: Record<string, string> = {
       ...baseProps,
     };
