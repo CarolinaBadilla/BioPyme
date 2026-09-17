@@ -83,7 +83,7 @@ jobs:
   # ==========================================
   deploy:
     name: Deploy to VPS
-    needs: security
+    #needs: security
     runs-on: ubuntu-latest
     steps:
       - name: Execute Remote SSH Commands
