@@ -252,3 +252,33 @@ model ExtrusoraSoja {
 
   @@map("extrusoras_soja")
 }
+
+model MapCategory {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique // Ej: "Estaciones YPF", "Colegios"
+  slug        String       @unique // Ej: "estaciones-ypf", "colegios"
+  description String?
+  color       String       @default("#3b82f6") // Color identificatorio
+  icon        String       @default("📍")      // Emoji o ícono visual
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  features    MapFeature[]
+
+  @@map("map_categories")
+}
+
+model MapFeature {
+  id          Int          @id @default(autoincrement())
+  categoryId  Int
+  name        String       // Nombre principal del punto
+  latitude    Float
+  longitude   Float
+  properties  Json?        // Campos libres y personalizados en formato JSON
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  category    MapCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("map_features")
+}
